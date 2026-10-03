@@ -286,6 +286,14 @@
       padding: 10px 0;
       font-family: var(--font-mono);
       font-size: 13px;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+
+    .nav-inner::-webkit-scrollbar {
+      display: none;
+      width: 0;
+      height: 0;
     }
 
     .nav-inner a {
@@ -469,6 +477,14 @@
       background-color: var(--surface-subtle);
       overflow-x: auto;
       white-space: nowrap;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+
+    .showcase-nav::-webkit-scrollbar {
+      display: none;
+      width: 0;
+      height: 0;
     }
 
     .showcase-btn {
@@ -552,6 +568,21 @@
       font-size: 13.5px;
       line-height: 1.55;
       color: var(--code-text);
+      scrollbar-width: thin;
+      scrollbar-color: var(--code-border) transparent;
+    }
+
+    .code-wrapper pre::-webkit-scrollbar {
+      height: 5px;
+    }
+
+    .code-wrapper pre::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .code-wrapper pre::-webkit-scrollbar-thumb {
+      background: var(--code-border);
+      border-radius: 2px;
     }
 
     /* Editorial Syntax Highlighting Palette */
@@ -670,6 +701,14 @@
       overflow-x: auto;
       margin-bottom: 24px;
       -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+
+    .diagram-svg-wrap::-webkit-scrollbar {
+      display: none;
+      width: 0;
+      height: 0;
     }
 
     .diagram-svg-wrap svg {
@@ -753,6 +792,15 @@
       border-bottom: 1px solid var(--border);
       background-color: var(--surface-subtle);
       overflow-x: auto;
+      white-space: nowrap;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+
+    .config-nav::-webkit-scrollbar {
+      display: none;
+      width: 0;
+      height: 0;
     }
 
     .config-tab-btn {
