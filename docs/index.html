@@ -550,8 +550,50 @@
       overflow-x: auto;
       font-family: var(--font-mono);
       font-size: 13.5px;
-      line-height: 1.5;
+      line-height: 1.55;
       color: var(--code-text);
+    }
+
+    /* Editorial Syntax Highlighting Palette */
+    .tok-kw {
+      color: #f87171;
+      font-weight: 600;
+    }
+    .tok-str {
+      color: #86efac;
+    }
+    .tok-fn {
+      color: #c084fc;
+      font-weight: 500;
+    }
+    .tok-dec {
+      color: #fb923c;
+      font-weight: 600;
+    }
+    .tok-com {
+      color: #94a3b8;
+      font-style: italic;
+    }
+    .tok-type {
+      color: #38bdf8;
+      font-weight: 600;
+    }
+    .tok-num {
+      color: #f472b6;
+    }
+    .tok-bool {
+      color: #f87171;
+      font-weight: 600;
+    }
+    .tok-op {
+      color: #f87171;
+    }
+    .tok-key {
+      color: #38bdf8;
+      font-weight: 600;
+    }
+    .tok-punct {
+      color: #94a3b8;
     }
 
     .code-wrapper .btn-copy-code {
@@ -930,38 +972,38 @@
           <span>main.py — Minimal Complete Working Example</span>
           <button class="btn-copy-code" onclick="copySnippet('snippet-quickstart')">Copy Code</button>
         </div>
-        <pre id="snippet-quickstart"><code>from fastapi import FastAPI, Depends, Header, HTTPException
-from pydantic import BaseModel
-from fast_mcp import FastMCP
+        <pre id="snippet-quickstart"><code><span class="tok-kw">from</span> fastapi <span class="tok-kw">import</span> <span class="tok-type">FastAPI</span>, <span class="tok-type">Depends</span>, <span class="tok-type">Header</span>, <span class="tok-type">HTTPException</span>
+<span class="tok-kw">from</span> pydantic <span class="tok-kw">import</span> <span class="tok-type">BaseModel</span>
+<span class="tok-kw">from</span> fast_mcp <span class="tok-kw">import</span> <span class="tok-type">FastMCP</span>
 
-app = FastAPI(title="Store API", version="1.0.0")
-mcp = FastMCP(app=app, name="store-mcp")
+app <span class="tok-op">=</span> <span class="tok-type">FastAPI</span>(title<span class="tok-op">=</span><span class="tok-str">&quot;Store API&quot;</span>, version<span class="tok-op">=</span><span class="tok-str">&quot;1.0.0&quot;</span>)
+mcp <span class="tok-op">=</span> <span class="tok-type">FastMCP</span>(app<span class="tok-op">=</span>app, name<span class="tok-op">=</span><span class="tok-str">&quot;store-mcp&quot;</span>)
 
-# 1. Existing FastAPI route automatically reflected as an MCP tool
-class Product(BaseModel):
-    id: int
-    name: str
-    price: float
+<span class="tok-com"># 1. Existing FastAPI route automatically reflected as an MCP tool</span>
+<span class="tok-kw">class</span> <span class="tok-type">Product</span>(<span class="tok-type">BaseModel</span>):
+    id: <span class="tok-type">int</span>
+    name: <span class="tok-type">str</span>
+    price: <span class="tok-type">float</span>
 
-@app.get("/products/{product_id}", tags=["mcp"])
-async def get_product(product_id: int) -> Product:
-    """Fetch product details by ID."""
-    if product_id == 404:
-        raise HTTPException(status_code=404, detail="Product not found")
-    return Product(id=product_id, name="Smart Widget", price=29.99)
+<span class="tok-dec">@app.get(&quot;/products/{product_id}&quot;, tags=[&quot;mcp&quot;])</span>
+<span class="tok-kw">async</span> <span class="tok-kw">def</span> <span class="tok-fn">get_product</span>(product_id: <span class="tok-type">int</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">Product</span>:
+    <span class="tok-str">&quot;&quot;&quot;Fetch product details by ID.&quot;&quot;&quot;</span>
+    <span class="tok-kw">if</span> product_id <span class="tok-op">==</span> <span class="tok-num">404</span>:
+        <span class="tok-kw">raise</span> <span class="tok-type">HTTPException</span>(status_code<span class="tok-op">=</span><span class="tok-num">404</span>, detail<span class="tok-op">=</span><span class="tok-str">&quot;Product not found&quot;</span>)
+    <span class="tok-kw">return</span> <span class="tok-type">Product</span>(id<span class="tok-op">=</span>product_id, name<span class="tok-op">=</span><span class="tok-str">&quot;Smart Widget&quot;</span>, price<span class="tok-op">=</span><span class="tok-num">29.99</span>)
 
-# 2. Custom composite AI tool with native FastAPI dependency injection
-def verify_token(authorization: str = Header(...)) -> str:
-    if not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Invalid token")
-    return authorization.split(" ")[1]
+<span class="tok-com"># 2. Custom composite AI tool with native FastAPI dependency injection</span>
+<span class="tok-kw">def</span> <span class="tok-fn">verify_token</span>(authorization: <span class="tok-type">str</span> <span class="tok-op">=</span> <span class="tok-type">Header</span>(...)) <span class="tok-op">-&gt;</span> <span class="tok-type">str</span>:
+    <span class="tok-kw">if</span> <span class="tok-kw">not</span> authorization.<span class="tok-fn">startswith</span>(<span class="tok-str">&quot;Bearer &quot;</span>):
+        <span class="tok-kw">raise</span> <span class="tok-type">HTTPException</span>(status_code<span class="tok-op">=</span><span class="tok-num">401</span>, detail<span class="tok-op">=</span><span class="tok-str">&quot;Invalid token&quot;</span>)
+    <span class="tok-kw">return</span> authorization.<span class="tok-fn">split</span>(<span class="tok-str">&quot; &quot;</span>)[<span class="tok-num">1</span>]
 
-@mcp.tool(name="order_status", description="Check customer order status")
-def check_order(order_id: str, user: str = Depends(verify_token)) -> dict:
-    return {"order_id": order_id, "customer": user, "status": "Shipped"}
+<span class="tok-dec">@mcp.tool(name=&quot;order_status&quot;, description=&quot;Check customer order status&quot;)</span>
+<span class="tok-kw">def</span> <span class="tok-fn">check_order</span>(order_id: <span class="tok-type">str</span>, user: <span class="tok-type">str</span> <span class="tok-op">=</span> <span class="tok-type">Depends</span>(verify_token)) <span class="tok-op">-&gt;</span> <span class="tok-type">dict</span>:
+    <span class="tok-kw">return</span> {<span class="tok-str">&quot;order_id&quot;</span>: order_id, <span class="tok-str">&quot;customer&quot;</span>: user, <span class="tok-str">&quot;status&quot;</span>: <span class="tok-str">&quot;Shipped&quot;</span>}
 
-# 3. Mount MCP endpoints (/mcp/sse, /mcp/messages, /mcp/docs)
-mcp.mount()</code></pre>
+<span class="tok-com"># 3. Mount MCP endpoints (/mcp/sse, /mcp/messages, /mcp/docs)</span>
+mcp.<span class="tok-fn">mount</span>()</code></pre>
       </div>
 
       <p style="font-size: 15px; color: var(--text-muted);">
@@ -1001,19 +1043,19 @@ mcp.mount()</code></pre>
               <span>Python Route Definition</span>
               <button class="btn-copy-code" onclick="copySnippet('code-reflection')">Copy Code</button>
             </div>
-            <pre id="code-reflection"><code>class InventoryQuery(BaseModel):
-    category: str
-    max_price: float = 100.0
+            <pre id="code-reflection"><code><span class="tok-kw">class</span> <span class="tok-type">InventoryQuery</span>(<span class="tok-type">BaseModel</span>):
+    category: <span class="tok-type">str</span>
+    max_price: <span class="tok-type">float</span> <span class="tok-op">=</span> <span class="tok-num">100.0</span>
 
-@app.post("/inventory/search", tags=["mcp"])
-async def search_inventory(query: InventoryQuery, limit: int = 10) -> list[dict]:
-    """Search catalog items by category and maximum price.
+<span class="tok-dec">@app.post(&quot;/inventory/search&quot;, tags=[&quot;mcp&quot;])</span>
+<span class="tok-kw">async</span> <span class="tok-kw">def</span> <span class="tok-fn">search_inventory</span>(query: <span class="tok-type">InventoryQuery</span>, limit: <span class="tok-type">int</span> <span class="tok-op">=</span> <span class="tok-num">10</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">list</span>[<span class="tok-type">dict</span>]:
+    <span class="tok-str">&quot;&quot;&quot;Search catalog items by category and maximum price.
 
     Args:
         query: Filter specification with category and price limit.
         limit: Maximum number of records to return.
-    """
-    return [{"item": "Keyboard", "price": 49.99}]</code></pre>
+    &quot;&quot;&quot;</span>
+    <span class="tok-kw">return</span> [{<span class="tok-str">&quot;item&quot;</span>: <span class="tok-str">&quot;Keyboard&quot;</span>, <span class="tok-str">&quot;price&quot;</span>: <span class="tok-num">49.99</span>}]</code></pre>
           </div>
         </div>
 
@@ -1030,16 +1072,16 @@ async def search_inventory(query: InventoryQuery, limit: int = 10) -> list[dict]
               <span>Custom Tool Registration</span>
               <button class="btn-copy-code" onclick="copySnippet('code-tools')">Copy Code</button>
             </div>
-            <pre id="code-tools"><code># Bare decorator
-@mcp.tool
-def calculate_quote(quantity: int, discount: float = 0.0) -> float:
-    """Calculate quotation with volume discount."""
-    return quantity * 100.0 * (1.0 - discount)
+            <pre id="code-tools"><code><span class="tok-com"># Bare decorator</span>
+<span class="tok-dec">@mcp.tool</span>
+<span class="tok-kw">def</span> <span class="tok-fn">calculate_quote</span>(quantity: <span class="tok-type">int</span>, discount: <span class="tok-type">float</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">float</span>:
+    <span class="tok-str">&quot;&quot;&quot;Calculate quotation with volume discount.&quot;&quot;&quot;</span>
+    <span class="tok-kw">return</span> quantity <span class="tok-op">*</span> <span class="tok-num">100.0</span> <span class="tok-op">*</span> (<span class="tok-num">1.0</span> <span class="tok-op">-</span> discount)
 
-# Parameterized decorator with custom name & tags
-@mcp.tool(name="stock_check", description="Lookup stock quantity", tags=["inventory"])
-async def check_inventory(sku: str) -> dict:
-    return {"sku": sku, "in_stock": True, "count": 42}</code></pre>
+<span class="tok-com"># Parameterized decorator with custom name &amp; tags</span>
+<span class="tok-dec">@mcp.tool(name=&quot;stock_check&quot;, description=&quot;Lookup stock quantity&quot;, tags=[&quot;inventory&quot;])</span>
+<span class="tok-kw">async</span> <span class="tok-kw">def</span> <span class="tok-fn">check_inventory</span>(sku: <span class="tok-type">str</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">dict</span>:
+    <span class="tok-kw">return</span> {<span class="tok-str">&quot;sku&quot;</span>: sku, <span class="tok-str">&quot;in_stock&quot;</span>: <span class="tok-bool">True</span>, <span class="tok-str">&quot;count&quot;</span>: <span class="tok-num">42</span>}</code></pre>
           </div>
         </div>
 
@@ -1056,22 +1098,22 @@ async def check_inventory(sku: str) -> dict:
               <span>Scope Bridging Example</span>
               <button class="btn-copy-code" onclick="copySnippet('code-auth')">Copy Code</button>
             </div>
-            <pre id="code-auth"><code>from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from fast_mcp import FastMCP, get_current_request
+            <pre id="code-auth"><code><span class="tok-kw">from</span> fastapi.security <span class="tok-kw">import</span> <span class="tok-type">HTTPBearer</span>, <span class="tok-type">HTTPAuthorizationCredentials</span>
+<span class="tok-kw">from</span> fast_mcp <span class="tok-kw">import</span> <span class="tok-type">FastMCP</span>, get_current_request
 
-security = HTTPBearer()
+security <span class="tok-op">=</span> <span class="tok-type">HTTPBearer</span>()
 
-def get_current_user(creds: HTTPAuthorizationCredentials = Depends(security)) -> str:
-    token = creds.credentials
-    if token != "secret-ai-token":
-        raise HTTPException(status_code=401, detail="Invalid token")
-    return "authorized_agent"
+<span class="tok-kw">def</span> <span class="tok-fn">get_current_user</span>(creds: <span class="tok-type">HTTPAuthorizationCredentials</span> <span class="tok-op">=</span> <span class="tok-type">Depends</span>(security)) <span class="tok-op">-&gt;</span> <span class="tok-type">str</span>:
+    token <span class="tok-op">=</span> creds.credentials
+    <span class="tok-kw">if</span> token <span class="tok-op">!=</span> <span class="tok-str">&quot;secret-ai-token&quot;</span>:
+        <span class="tok-kw">raise</span> <span class="tok-type">HTTPException</span>(status_code<span class="tok-op">=</span><span class="tok-num">401</span>, detail<span class="tok-op">=</span><span class="tok-str">&quot;Invalid token&quot;</span>)
+    <span class="tok-kw">return</span> <span class="tok-str">&quot;authorized_agent&quot;</span>
 
-@mcp.tool
-async def sensitive_action(user: str = Depends(get_current_user)) -> dict:
-    # Access low-level request if needed
-    request = get_current_request()
-    return {"status": "ok", "caller": user, "ip": request.client.host}</code></pre>
+<span class="tok-dec">@mcp.tool</span>
+<span class="tok-kw">async</span> <span class="tok-kw">def</span> <span class="tok-fn">sensitive_action</span>(user: <span class="tok-type">str</span> <span class="tok-op">=</span> <span class="tok-type">Depends</span>(get_current_user)) <span class="tok-op">-&gt;</span> <span class="tok-type">dict</span>:
+    <span class="tok-com"># Access low-level request if needed</span>
+    request <span class="tok-op">=</span> <span class="tok-fn">get_current_request</span>()
+    <span class="tok-kw">return</span> {<span class="tok-str">&quot;status&quot;</span>: <span class="tok-str">&quot;ok&quot;</span>, <span class="tok-str">&quot;caller&quot;</span>: user, <span class="tok-str">&quot;ip&quot;</span>: request.client.host}</code></pre>
           </div>
         </div>
 
@@ -1088,16 +1130,16 @@ async def sensitive_action(user: str = Depends(get_current_user)) -> dict:
               <span>Dynamic Discovery Configuration</span>
               <button class="btn-copy-code" onclick="copySnippet('code-discovery')">Copy Code</button>
             </div>
-            <pre id="code-discovery"><code>mcp = FastMCP(
-    app=app,
-    dynamic_discovery=True,  # Or set dynamic_discovery_threshold=20
-    baseline_tools=["search_tools", "get_health_status"],
-    baseline_tag="core",
+            <pre id="code-discovery"><code>mcp <span class="tok-op">=</span> <span class="tok-type">FastMCP</span>(
+    app<span class="tok-op">=</span>app,
+    dynamic_discovery<span class="tok-op">=</span><span class="tok-bool">True</span>,  <span class="tok-com"># Or set dynamic_discovery_threshold=20</span>
+    baseline_tools<span class="tok-op">=</span>[<span class="tok-str">&quot;search_tools&quot;</span>, <span class="tok-str">&quot;get_health_status&quot;</span>],
+    baseline_tag<span class="tok-op">=</span><span class="tok-str">&quot;core&quot;</span>,
 )
 
-# When LLM asks to create an invoice, it first calls:
-# search_tools(query="invoice")
-# -> Returns matching tools: [create_invoice, get_invoice, cancel_invoice]</code></pre>
+<span class="tok-com"># When LLM asks to create an invoice, it first calls:</span>
+<span class="tok-com"># search_tools(query=&quot;invoice&quot;)</span>
+<span class="tok-com"># -&gt; Returns matching tools: [create_invoice, get_invoice, cancel_invoice]</span></code></pre>
           </div>
         </div>
 
@@ -1114,17 +1156,17 @@ async def sensitive_action(user: str = Depends(get_current_user)) -> dict:
               <span>Custom Serializer Example</span>
               <button class="btn-copy-code" onclick="copySnippet('code-errors')">Copy Code</button>
             </div>
-            <pre id="code-errors"><code>class Report(BaseModel):
-    title: str
-    metrics: dict[str, int]
+            <pre id="code-errors"><code><span class="tok-kw">class</span> <span class="tok-type">Report</span>(<span class="tok-type">BaseModel</span>):
+    title: <span class="tok-type">str</span>
+    metrics: <span class="tok-type">dict</span>[<span class="tok-type">str</span>, <span class="tok-type">int</span>]
 
-@mcp.serializer(Report)
-def format_report(report: Report) -> str:
-    """Format report into concise markdown table for LLM consumption."""
-    md = f"### {report.title}\n"
-    for k, v in report.metrics.items():
-        md += f"- **{k}**: {v}\n"
-    return md</code></pre>
+<span class="tok-dec">@mcp.serializer(Report)</span>
+<span class="tok-kw">def</span> <span class="tok-fn">format_report</span>(report: <span class="tok-type">Report</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">str</span>:
+    <span class="tok-str">&quot;&quot;&quot;Format report into concise markdown table for LLM consumption.&quot;&quot;&quot;</span>
+    md <span class="tok-op">=</span> <span class="tok-str">f&quot;### {report.title}\n&quot;</span>
+    <span class="tok-kw">for</span> k, v <span class="tok-kw">in</span> report.metrics.<span class="tok-fn">items</span>():
+        md <span class="tok-op">+</span><span class="tok-op">=</span> <span class="tok-str">f&quot;- **{k}**: {v}\n&quot;</span>
+    <span class="tok-kw">return</span> md</code></pre>
           </div>
         </div>
 
@@ -1141,19 +1183,19 @@ def format_report(report: Report) -> str:
               <span>MCP App Registration</span>
               <button class="btn-copy-code" onclick="copySnippet('code-apps')">Copy Code</button>
             </div>
-            <pre id="code-apps"><code>@mcp.app(
-    name="order_dashboard",
-    resource_uri="ui://store/dashboard",
-    html="""
-    <div style="font-family: sans-serif; padding: 1.5rem; background: #f8fafc; border: 1px solid #e2e8f0;">
-      <h2>Live Store Dashboard</h2>
-      <p>Active Users: <strong>1,420</strong></p>
-    </div>
-    """
-)
-def live_dashboard() -> str:
-    """Launch interactive store dashboard widget."""
-    return '<iframe src="ui://store/dashboard" width="100%" height="400"></iframe>'</code></pre>
+            <pre id="code-apps"><code><span class="tok-dec">@mcp.app(
+    name=&quot;order_dashboard&quot;,
+    resource_uri=&quot;ui://store/dashboard&quot;,
+    html=&quot;&quot;&quot;
+    &lt;div style=&quot;font-family: sans-serif; padding: 1.5rem; background: #f8fafc; border: 1px solid #e2e8f0;&quot;&gt;
+      &lt;h2&gt;Live Store Dashboard&lt;/h2&gt;
+      &lt;p&gt;Active Users: &lt;strong&gt;1,420&lt;/strong&gt;&lt;/p&gt;
+    &lt;/div&gt;
+    &quot;&quot;&quot;
+)</span>
+<span class="tok-kw">def</span> <span class="tok-fn">live_dashboard</span>() <span class="tok-op">-&gt;</span> <span class="tok-type">str</span>:
+    <span class="tok-str">&quot;&quot;&quot;Launch interactive store dashboard widget.&quot;&quot;&quot;</span>
+    <span class="tok-kw">return</span> <span class="tok-str">&#x27;&lt;iframe src=&quot;ui://store/dashboard&quot; width=&quot;100%&quot; height=&quot;400&quot;&gt;&lt;/iframe&gt;&#x27;</span></code></pre>
           </div>
         </div>
 
@@ -1170,21 +1212,21 @@ def live_dashboard() -> str:
               <span>CLI Usage & Programmatic stdio</span>
               <button class="btn-copy-code" onclick="copySnippet('code-stdio')">Copy Code</button>
             </div>
-            <pre id="code-stdio"><code># Shell Command:
-fast-mcp stdio main:app
+            <pre id="code-stdio"><code><span class="tok-com"># Shell Command:</span>
+<span class="tok-fn">fast-mcp</span> stdio main:app
 
-# Or Programmatically in Python:
-import asyncio
-from fast_mcp import FastMCP, run_stdio
+<span class="tok-com"># Or Programmatically in Python:</span>
+<span class="tok-kw">import</span> asyncio
+<span class="tok-kw">from</span> fast_mcp <span class="tok-kw">import</span> <span class="tok-type">FastMCP</span>, run_stdio
 
-mcp = FastMCP(name="my-stdio-server")
+mcp <span class="tok-op">=</span> <span class="tok-type">FastMCP</span>(name<span class="tok-op">=</span><span class="tok-str">&quot;my-stdio-server&quot;</span>)
 
-@mcp.tool()
-def add(a: int, b: int) -> int:
-    return a + b
+<span class="tok-dec">@mcp.tool()</span>
+<span class="tok-kw">def</span> <span class="tok-fn">add</span>(a: <span class="tok-type">int</span>, b: <span class="tok-type">int</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">int</span>:
+    <span class="tok-kw">return</span> a <span class="tok-op">+</span> b
 
-if __name__ == "__main__":
-    asyncio.run(run_stdio(mcp))</code></pre>
+<span class="tok-kw">if</span> __name__ <span class="tok-op">==</span> <span class="tok-str">&quot;__main__&quot;</span>:
+    asyncio.<span class="tok-fn">run</span>(<span class="tok-fn">run_stdio</span>(mcp))</code></pre>
           </div>
         </div>
       </div>
@@ -1216,20 +1258,20 @@ if __name__ == "__main__":
               <span>claude_desktop_config.json</span>
               <button class="btn-copy-code" onclick="copySnippet('code-cfg-claude-uvx')">Copy JSON</button>
             </div>
-            <pre id="code-cfg-claude-uvx"><code>{
-  "mcpServers": {
-    "my-fastapi-backend": {
-      "command": "uvx",
-      "args": [
-        "--from",
-        "mcp-fastapi",
-        "fast-mcp",
-        "stdio",
-        "main:app"
-      ]
-    }
-  }
-}</code></pre>
+            <pre id="code-cfg-claude-uvx"><code><span class="tok-punct">{</span>
+  <span class="tok-key">&quot;mcpServers&quot;</span><span class="tok-punct">:</span> <span class="tok-punct">{</span>
+    <span class="tok-key">&quot;my-fastapi-backend&quot;</span><span class="tok-punct">:</span> <span class="tok-punct">{</span>
+      <span class="tok-key">&quot;command&quot;</span><span class="tok-punct">:</span> <span class="tok-str">&quot;uvx&quot;</span><span class="tok-punct">,</span>
+      <span class="tok-key">&quot;args&quot;</span><span class="tok-punct">:</span> <span class="tok-punct">[</span>
+        <span class="tok-str">&quot;--from&quot;</span><span class="tok-punct">,</span>
+        <span class="tok-str">&quot;mcp-fastapi&quot;</span><span class="tok-punct">,</span>
+        <span class="tok-str">&quot;fast-mcp&quot;</span><span class="tok-punct">,</span>
+        <span class="tok-str">&quot;stdio&quot;</span><span class="tok-punct">,</span>
+        <span class="tok-str">&quot;main:app&quot;</span>
+      <span class="tok-punct">]</span>
+    <span class="tok-punct">}</span>
+  <span class="tok-punct">}</span>
+<span class="tok-punct">}</span></code></pre>
           </div>
         </div>
 
@@ -1243,17 +1285,17 @@ if __name__ == "__main__":
               <span>claude_desktop_config.json</span>
               <button class="btn-copy-code" onclick="copySnippet('code-cfg-claude-local')">Copy JSON</button>
             </div>
-            <pre id="code-cfg-claude-local"><code>{
-  "mcpServers": {
-    "my-fastapi-backend": {
-      "command": "fast-mcp",
-      "args": [
-        "stdio",
-        "main:app"
-      ]
-    }
-  }
-}</code></pre>
+            <pre id="code-cfg-claude-local"><code><span class="tok-punct">{</span>
+  <span class="tok-key">&quot;mcpServers&quot;</span><span class="tok-punct">:</span> <span class="tok-punct">{</span>
+    <span class="tok-key">&quot;my-fastapi-backend&quot;</span><span class="tok-punct">:</span> <span class="tok-punct">{</span>
+      <span class="tok-key">&quot;command&quot;</span><span class="tok-punct">:</span> <span class="tok-str">&quot;fast-mcp&quot;</span><span class="tok-punct">,</span>
+      <span class="tok-key">&quot;args&quot;</span><span class="tok-punct">:</span> <span class="tok-punct">[</span>
+        <span class="tok-str">&quot;stdio&quot;</span><span class="tok-punct">,</span>
+        <span class="tok-str">&quot;main:app&quot;</span>
+      <span class="tok-punct">]</span>
+    <span class="tok-punct">}</span>
+  <span class="tok-punct">}</span>
+<span class="tok-punct">}</span></code></pre>
           </div>
         </div>
 
@@ -1267,14 +1309,14 @@ if __name__ == "__main__":
               <span>Cursor MCP Configuration</span>
               <button class="btn-copy-code" onclick="copySnippet('code-cfg-cursor')">Copy JSON</button>
             </div>
-            <pre id="code-cfg-cursor"><code>{
-  "mcpServers": {
-    "fastapi-cursor-tools": {
-      "command": "uvx",
-      "args": ["--from", "mcp-fastapi", "fast-mcp", "stdio", "main:app"]
-    }
-  }
-}</code></pre>
+            <pre id="code-cfg-cursor"><code><span class="tok-punct">{</span>
+  <span class="tok-key">&quot;mcpServers&quot;</span><span class="tok-punct">:</span> <span class="tok-punct">{</span>
+    <span class="tok-key">&quot;fastapi-cursor-tools&quot;</span><span class="tok-punct">:</span> <span class="tok-punct">{</span>
+      <span class="tok-key">&quot;command&quot;</span><span class="tok-punct">:</span> <span class="tok-str">&quot;uvx&quot;</span><span class="tok-punct">,</span>
+      <span class="tok-key">&quot;args&quot;</span><span class="tok-punct">:</span> <span class="tok-punct">[</span><span class="tok-str">&quot;--from&quot;</span><span class="tok-punct">,</span> <span class="tok-str">&quot;mcp-fastapi&quot;</span><span class="tok-punct">,</span> <span class="tok-str">&quot;fast-mcp&quot;</span><span class="tok-punct">,</span> <span class="tok-str">&quot;stdio&quot;</span><span class="tok-punct">,</span> <span class="tok-str">&quot;main:app&quot;</span><span class="tok-punct">]</span>
+    <span class="tok-punct">}</span>
+  <span class="tok-punct">}</span>
+<span class="tok-punct">}</span></code></pre>
           </div>
         </div>
 
@@ -1288,14 +1330,14 @@ if __name__ == "__main__":
               <span>SSE Client Configuration</span>
               <button class="btn-copy-code" onclick="copySnippet('code-cfg-sse')">Copy JSON</button>
             </div>
-            <pre id="code-cfg-sse"><code>{
-  "mcpServers": {
-    "fastapi-remote-sse": {
-      "url": "http://127.0.0.1:8000/mcp/sse",
-      "transport": "sse"
-    }
-  }
-}</code></pre>
+            <pre id="code-cfg-sse"><code><span class="tok-punct">{</span>
+  <span class="tok-key">&quot;mcpServers&quot;</span><span class="tok-punct">:</span> <span class="tok-punct">{</span>
+    <span class="tok-key">&quot;fastapi-remote-sse&quot;</span><span class="tok-punct">:</span> <span class="tok-punct">{</span>
+      <span class="tok-key">&quot;url&quot;</span><span class="tok-punct">:</span> <span class="tok-str">&quot;http://127.0.0.1:8000/mcp/sse&quot;</span><span class="tok-punct">,</span>
+      <span class="tok-key">&quot;transport&quot;</span><span class="tok-punct">:</span> <span class="tok-str">&quot;sse&quot;</span>
+    <span class="tok-punct">}</span>
+  <span class="tok-punct">}</span>
+<span class="tok-punct">}</span></code></pre>
           </div>
         </div>
       </div>
@@ -1612,38 +1654,38 @@ if __name__ == "__main__":
           <span>tests/test_mcp_integration.py</span>
           <button class="btn-copy-code" onclick="copySnippet('code-testing')">Copy Code</button>
         </div>
-        <pre id="code-testing"><code>import pytest
-from httpx import AsyncClient, ASGITransport
-from fastapi import FastAPI
-from fast_mcp import FastMCP
+        <pre id="code-testing"><code><span class="tok-kw">import</span> pytest
+<span class="tok-kw">from</span> httpx <span class="tok-kw">import</span> <span class="tok-type">AsyncClient</span>, <span class="tok-type">ASGITransport</span>
+<span class="tok-kw">from</span> fastapi <span class="tok-kw">import</span> <span class="tok-type">FastAPI</span>
+<span class="tok-kw">from</span> fast_mcp <span class="tok-kw">import</span> <span class="tok-type">FastMCP</span>
 
-@pytest.mark.asyncio
-async def test_mcp_endpoints_and_tools():
-    app = FastAPI()
-    mcp = FastMCP(app=app, name="test-store")
+<span class="tok-dec">@pytest.mark.asyncio</span>
+<span class="tok-kw">async</span> <span class="tok-kw">def</span> <span class="tok-fn">test_mcp_endpoints_and_tools</span>():
+    app <span class="tok-op">=</span> <span class="tok-type">FastAPI</span>()
+    mcp <span class="tok-op">=</span> <span class="tok-type">FastMCP</span>(app<span class="tok-op">=</span>app, name<span class="tok-op">=</span><span class="tok-str">&quot;test-store&quot;</span>)
 
-    @app.get("/items/{item_id}", tags=["mcp"])
-    def get_item(item_id: int):
-        return {"id": item_id, "name": "Widget"}
+    <span class="tok-dec">@app.get(&quot;/items/{item_id}&quot;, tags=[&quot;mcp&quot;])</span>
+    <span class="tok-kw">def</span> <span class="tok-fn">get_item</span>(item_id: <span class="tok-type">int</span>):
+        <span class="tok-kw">return</span> {<span class="tok-str">&quot;id&quot;</span>: item_id, <span class="tok-str">&quot;name&quot;</span>: <span class="tok-str">&quot;Widget&quot;</span>}
 
-    mcp.mount()
+    mcp.<span class="tok-fn">mount</span>()
 
-    transport = ASGITransport(app=app)
-    async with AsyncClient(transport=transport, base_url="http://test") as client:
-        # 1. Verify docs inspector
-        res = await client.get("/mcp/docs")
-        assert res.status_code == 200
+    transport <span class="tok-op">=</span> <span class="tok-type">ASGITransport</span>(app<span class="tok-op">=</span>app)
+    <span class="tok-kw">async</span> <span class="tok-kw">with</span> <span class="tok-type">AsyncClient</span>(transport<span class="tok-op">=</span>transport, base_url<span class="tok-op">=</span><span class="tok-str">&quot;http://test&quot;</span>) <span class="tok-kw">as</span> client:
+        <span class="tok-com"># 1. Verify docs inspector</span>
+        res <span class="tok-op">=</span> <span class="tok-kw">await</span> client.<span class="tok-fn">get</span>(<span class="tok-str">&quot;/mcp/docs&quot;</span>)
+        <span class="tok-kw">assert</span> res.status_code <span class="tok-op">==</span> <span class="tok-num">200</span>
 
-        # 2. Verify tool reflection
-        tools_res = await client.get("/mcp/docs/tools")
-        assert tools_res.status_code == 200
-        tools = tools_res.json()["tools"]
-        assert any(t["name"] == "get_item" for t in tools)
+        <span class="tok-com"># 2. Verify tool reflection</span>
+        tools_res <span class="tok-op">=</span> <span class="tok-kw">await</span> client.<span class="tok-fn">get</span>(<span class="tok-str">&quot;/mcp/docs/tools&quot;</span>)
+        <span class="tok-kw">assert</span> tools_res.status_code <span class="tok-op">==</span> <span class="tok-num">200</span>
+        tools <span class="tok-op">=</span> tools_res.<span class="tok-fn">json</span>()[<span class="tok-str">&quot;tools&quot;</span>]
+        <span class="tok-kw">assert</span> <span class="tok-fn">any</span>(t[<span class="tok-str">&quot;name&quot;</span>] <span class="tok-op">==</span> <span class="tok-str">&quot;get_item&quot;</span> <span class="tok-kw">for</span> t <span class="tok-kw">in</span> tools)
 
-        # 3. Test execution endpoint
-        call_res = await client.post("/mcp/docs/call", json={"name": "get_item", "arguments": {"item_id": 42}})
-        assert call_res.status_code == 200
-        assert call_res.json()["result"]["id"] == 42</code></pre>
+        <span class="tok-com"># 3. Test execution endpoint</span>
+        call_res <span class="tok-op">=</span> <span class="tok-kw">await</span> client.<span class="tok-fn">post</span>(<span class="tok-str">&quot;/mcp/docs/call&quot;</span>, json<span class="tok-op">=</span>{<span class="tok-str">&quot;name&quot;</span>: <span class="tok-str">&quot;get_item&quot;</span>, <span class="tok-str">&quot;arguments&quot;</span>: {<span class="tok-str">&quot;item_id&quot;</span>: <span class="tok-num">42</span>}})
+        <span class="tok-kw">assert</span> call_res.status_code <span class="tok-op">==</span> <span class="tok-num">200</span>
+        <span class="tok-kw">assert</span> call_res.<span class="tok-fn">json</span>()[<span class="tok-str">&quot;result&quot;</span>][<span class="tok-str">&quot;id&quot;</span>] <span class="tok-op">==</span> <span class="tok-num">42</span></code></pre>
       </div>
     </section>
 
