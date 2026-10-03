@@ -108,6 +108,8 @@
 
     html {
       scroll-behavior: smooth;
+      max-width: 100%;
+      overflow-x: hidden;
     }
 
     body {
@@ -117,6 +119,8 @@
       font-size: 16px;
       line-height: 1.6;
       -webkit-font-smoothing: antialiased;
+      max-width: 100%;
+      overflow-x: hidden;
     }
 
     /* Links & Hover Underline (Editorial requirement) */
@@ -679,6 +683,102 @@
       background-color: var(--surface-subtle);
     }
 
+    /* Table Responsive Container */
+    .table-responsive {
+      width: 100%;
+      max-width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin: 20px 0;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border-dark) transparent;
+    }
+
+    .table-responsive::-webkit-scrollbar {
+      height: 5px;
+    }
+    .table-responsive::-webkit-scrollbar-thumb {
+      background: var(--border-dark);
+      border-radius: 2px;
+    }
+
+    .table-responsive table.editorial-table {
+      margin: 0;
+      border: none;
+      min-width: 620px;
+    }
+
+    /* Mobile Responsive Card Layout for API Table */
+    @media (max-width: 768px) {
+      .table-responsive-cards {
+        border: none;
+        overflow-x: visible;
+      }
+
+      .table-responsive-cards::-webkit-scrollbar {
+        display: none;
+      }
+
+      #api-table.responsive-cards {
+        min-width: 0 !important;
+        border: none;
+        background: transparent;
+      }
+
+      #api-table.responsive-cards thead {
+        display: none;
+      }
+
+      #api-table.responsive-cards,
+      #api-table.responsive-cards tbody,
+      #api-table.responsive-cards tr,
+      #api-table.responsive-cards td {
+        display: block;
+        width: 100% !important;
+        box-sizing: border-box;
+      }
+
+      #api-table.responsive-cards tr {
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        margin-bottom: 12px;
+        padding: 14px 16px;
+        background-color: var(--surface);
+      }
+
+      #api-table.responsive-cards tr:hover td {
+        background-color: transparent;
+      }
+
+      #api-table.responsive-cards td {
+        padding: 3px 0 !important;
+        border: none !important;
+      }
+
+      #api-table.responsive-cards td:nth-child(1) {
+        font-size: 14.5px;
+        font-weight: 600;
+        margin-bottom: 2px;
+      }
+
+      #api-table.responsive-cards td:nth-child(2) {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        text-transform: uppercase;
+        color: var(--accent);
+        letter-spacing: 0.5px;
+        margin-bottom: 6px;
+      }
+
+      #api-table.responsive-cards td:nth-child(3) {
+        font-size: 13.5px;
+        color: var(--text-muted);
+        line-height: 1.5;
+      }
+    }
+
     .code-inline {
       font-family: var(--font-mono);
       font-size: 13px;
@@ -928,7 +1028,7 @@
   <div class="top-strip">
     <div class="container top-strip-inner">
       <div>
-        <span>mcp-fastapi</span> • <span>FastAPI Model Context Protocol</span> • <span>Edition 2026</span>
+        <span>mcp-fastapi</span> • <span>FastAPI Model Context Protocol</span>
       </div>
       <div style="display: flex; gap: 16px; align-items: center;">
         <a href="https://pypi.org/project/mcp-fastapi/" target="_blank" rel="noopener">PyPI v0.1.0</a>
@@ -1399,42 +1499,44 @@ mcp <span class="tok-op">=</span> <span class="tok-type">FastMCP</span>(name<spa
         <span class="code-inline">mcp-fastapi</span> implements the complete Model Context Protocol specification and complies with major MCP directory crawlers (Smithery, Glama, Pulse MCP, MCP.so, awesome-mcp-servers).
       </p>
 
-      <table class="editorial-table">
-        <thead>
-          <tr>
-            <th>Capability</th>
-            <th>Support Level</th>
-            <th>Implementation Details</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><strong>Tools</strong></td>
-            <td>Full Support (Native)</td>
-            <td>Reflected FastAPI endpoints (<span class="code-inline">tags=["mcp"]</span>) and custom <span class="code-inline">@mcp.tool</span> decorators. Automatic Pydantic schema generation, docstring parsing, and dynamic discovery (<span class="code-inline">search_tools</span>).</td>
-          </tr>
-          <tr>
-            <td><strong>Resources</strong></td>
-            <td>Full Support (SEP-1865)</td>
-            <td>Custom <span class="code-inline">ui://</span> scheme support, SEP-1865 interactive HTML iframe bundles, and developer web inspector at <span class="code-inline">/mcp/docs</span>.</td>
-          </tr>
-          <tr>
-            <td><strong>Prompts</strong></td>
-            <td>Extensible</td>
-            <td>Supports prompt registration and templating conforming to MCP prompt specs.</td>
-          </tr>
-          <tr>
-            <td><strong>Transports</strong></td>
-            <td>Dual (stdio + sse)</td>
-            <td>Standard I/O pipes for desktop AI clients (<span class="code-inline">stdio</span>) and HTTP/SSE ASGI mount (<span class="code-inline">/mcp/sse</span> &amp; <span class="code-inline">/mcp/messages</span>).</td>
-          </tr>
-          <tr>
-            <td><strong>Auth Bridging</strong></td>
-            <td>Native ASGI</td>
-            <td>Bridges SSE/POST headers into in-memory ASGI <span class="code-inline">Request</span>, transparently solving FastAPI <span class="code-inline">Depends()</span> and <span class="code-inline">Security()</span>.</td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="table-responsive">
+        <table class="editorial-table">
+          <thead>
+            <tr>
+              <th>Capability</th>
+              <th>Support Level</th>
+              <th>Implementation Details</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Tools</strong></td>
+              <td>Full Support (Native)</td>
+              <td>Reflected FastAPI endpoints (<span class="code-inline">tags=["mcp"]</span>) and custom <span class="code-inline">@mcp.tool</span> decorators. Automatic Pydantic schema generation, docstring parsing, and dynamic discovery (<span class="code-inline">search_tools</span>).</td>
+            </tr>
+            <tr>
+              <td><strong>Resources</strong></td>
+              <td>Full Support (SEP-1865)</td>
+              <td>Custom <span class="code-inline">ui://</span> scheme support, SEP-1865 interactive HTML iframe bundles, and developer web inspector at <span class="code-inline">/mcp/docs</span>.</td>
+            </tr>
+            <tr>
+              <td><strong>Prompts</strong></td>
+              <td>Extensible</td>
+              <td>Supports prompt registration and templating conforming to MCP prompt specs.</td>
+            </tr>
+            <tr>
+              <td><strong>Transports</strong></td>
+              <td>Dual (stdio + sse)</td>
+              <td>Standard I/O pipes for desktop AI clients (<span class="code-inline">stdio</span>) and HTTP/SSE ASGI mount (<span class="code-inline">/mcp/sse</span> &amp; <span class="code-inline">/mcp/messages</span>).</td>
+            </tr>
+            <tr>
+              <td><strong>Auth Bridging</strong></td>
+              <td>Native ASGI</td>
+              <td>Bridges SSE/POST headers into in-memory ASGI <span class="code-inline">Request</span>, transparently solving FastAPI <span class="code-inline">Depends()</span> and <span class="code-inline">Security()</span>.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
       <div class="badge-bar" style="margin-top: 16px;">
         <a href="https://github.com/Manas-maker/fast-mcp/blob/master/smithery.yaml" class="badge" target="_blank" rel="noopener">📄 View smithery.yaml</a>
@@ -1621,14 +1723,15 @@ mcp <span class="tok-op">=</span> <span class="tok-type">FastMCP</span>(name<spa
         <input type="text" id="api-search" class="api-search-input" placeholder="Type to filter API reference symbols (e.g. mount, tool, serializer)..." onkeyup="filterApiTable()">
       </div>
 
-      <table class="editorial-table" id="api-table">
-        <thead>
-          <tr>
-            <th style="width: 25%;">Symbol & Signature</th>
-            <th style="width: 20%;">Type</th>
-            <th>Description & Usage</th>
-          </tr>
-        </thead>
+      <div class="table-responsive table-responsive-cards">
+        <table class="editorial-table responsive-cards" id="api-table">
+          <thead>
+            <tr>
+              <th style="width: 25%;">Symbol & Signature</th>
+              <th style="width: 20%;">Type</th>
+              <th>Description & Usage</th>
+            </tr>
+          </thead>
         <tbody>
           <tr>
             <td><code class="code-inline">FastMCP(...)</code></td>
@@ -1687,6 +1790,7 @@ mcp <span class="tok-op">=</span> <span class="tok-type">FastMCP</span>(name<spa
           </tr>
         </tbody>
       </table>
+      </div>
     </section>
 
     <!-- Testing & Verification Guide -->
