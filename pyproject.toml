@@ -5,6 +5,7 @@ description = "FastAPI-native Model Context Protocol framework"
 authors = [
     { name = "Manas Pradhan", email = "64654573+Manas-maker@users.noreply.github.com" }
 ]
+license = "MIT"
 requires-python = ">=3.10"
 dependencies = [
     "fastapi>=0.110.0",
