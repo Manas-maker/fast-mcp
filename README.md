@@ -1,11 +1,14 @@
 # fast-mcp
+<!-- mcp-name: io.github.Manas-maker/fast-mcp -->
 
 > **FastAPI-native Model Context Protocol (MCP) framework** with automatic route reflection, ASGI scope bridging, dynamic progressive tool discovery, resilient error recovery, and interactive in-chat MCP Apps (SEP-1865).
 
+[![PyPI](https://img.shields.io/pypi/v/mcp-fastapi.svg)](https://pypi.org/project/mcp-fastapi/)
 [![Tests](https://img.shields.io/badge/tests-108%20passed-brightgreen.svg)]()
+[![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue.svg)](https://manas-maker.github.io/fast-mcp/)
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue.svg)]()
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110%2B-009688.svg)]()
-[![MCP](https://img.shields.io/badge/MCP-1.0%2B-purple.svg)]()
+[![Glama](https://glama.ai/mcp/servers/Manas-maker/fast-mcp/badges/score.svg)](https://glama.ai/mcp/servers/Manas-maker/fast-mcp)
 
 ---
 

@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "fast-mcp": {
+      "command": "uvx",
+      "args": [
+        "--from",
+        "mcp-fastapi",
+        "fast-mcp",
+        "stdio",
+        "fast_mcp.demo:app"
+      ],
+      "env": {}
+    }
+  }
+}

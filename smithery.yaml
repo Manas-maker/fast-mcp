@@ -2,11 +2,21 @@
 # https://smithery.ai/docs/config
 startCommand:
   type: stdio
-  config:
-    command: "uvx"
-    args:
-      - "--from"
-      - "mcp-fastapi"
-      - "fast-mcp"
-      - "stdio"
-      - "${target}"
+  configSchema:
+    type: object
+    properties:
+      target:
+        type: string
+        description: "Python module and target application to expose (e.g. fast_mcp.demo:app or main:app)"
+        default: "fast_mcp.demo:app"
+  commandFunction: |-
+    (config) => ({
+      command: 'uvx',
+      args: [
+        '--from',
+        'mcp-fastapi',
+        'fast-mcp',
+        'stdio',
+        config.target || 'fast_mcp.demo:app'
+      ]
+    })
