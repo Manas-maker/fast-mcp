@@ -104,7 +104,12 @@ class MCPTestClient:
         self.endpoint_url = endpoint_url
         self._msg_id = 0
 
-    async def send_request(self, method: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
+    async def send_request(
+        self,
+        method: str,
+        params: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
+    ) -> dict[str, Any]:
         self._msg_id += 1
         req_id = self._msg_id
         payload = {
@@ -113,7 +118,7 @@ class MCPTestClient:
             "method": method,
             "params": params or {},
         }
-        res = await self.client.post(self.endpoint_url, json=payload)
+        res = await self.client.post(self.endpoint_url, json=payload, headers=headers)
         assert res.status_code in (200, 202)
         async for line in self.lines_iter:
             if line.startswith("data: "):
@@ -134,10 +139,15 @@ class MCPTestClient:
 
 
 @asynccontextmanager
-async def connect_mcp_test_client(app: Any, mount_path: str = "/mcp") -> AsyncIterator[MCPTestClient]:
+async def connect_mcp_test_client(
+    app: Any,
+    mount_path: str = "/mcp",
+    headers: dict[str, str] | None = None,
+    sse_headers: dict[str, str] | None = None,
+) -> AsyncIterator[MCPTestClient]:
     transport = StreamingASGITransport(app=app)
-    async with httpx.AsyncClient(transport=transport, base_url="http://testserver") as client:
-        async with client.stream("GET", f"{mount_path}/sse") as sse_response:
+    async with httpx.AsyncClient(transport=transport, base_url="http://testserver", headers=headers) as client:
+        async with client.stream("GET", f"{mount_path}/sse", headers=sse_headers) as sse_response:
             assert sse_response.status_code == 200
             lines_iter = sse_response.aiter_lines()
             endpoint_url = None

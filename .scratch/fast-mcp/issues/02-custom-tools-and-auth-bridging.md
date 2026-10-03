@@ -7,8 +7,8 @@ Enable developers to define custom AI-only tools on the `FastMCP` instance using
 
 **Status:** ready-for-agent
 
-- [ ] Custom tools registered via `@mcp.tool()` appear in `tools/list` and can be invoked alongside reflected routes.
-- [ ] Incoming HTTP/SSE headers (e.g. `Authorization: Bearer <token>`) are captured from the MCP client request and synthesized into an in-memory ASGI `Request`.
-- [ ] Reflected routes and `@mcp.tool()` handlers with `Depends(get_current_user)` or `Security()` execute and authenticate properly using the bridged credentials.
-- [ ] Calling a protected tool without valid credentials triggers FastAPI dependency authentication failure rather than leaking unauthorized data.
-- [ ] End-to-end tests verify authenticated tool calls over the ASGI Protocol Seam.
+- [x] Custom tools registered via `@mcp.tool()` appear in `tools/list` and can be invoked alongside reflected routes.
+- [x] Incoming HTTP/SSE headers (e.g. `Authorization: Bearer <token>`) are captured from the MCP client request and synthesized into an in-memory ASGI `Request`.
+- [x] Reflected routes and `@mcp.tool()` handlers with `Depends(get_current_user)` or `Security()` execute and authenticate properly using the bridged credentials.
+- [x] Calling a protected tool without valid credentials triggers FastAPI dependency authentication failure rather than leaking unauthorized data.
+- [x] End-to-end tests verify authenticated tool calls over the ASGI Protocol Seam.
