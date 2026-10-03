@@ -2,7 +2,7 @@
 
 > **FastAPI-native Model Context Protocol (MCP) framework** with automatic route reflection, ASGI scope bridging, dynamic progressive tool discovery, resilient error recovery, and interactive in-chat MCP Apps (SEP-1865).
 
-[![Tests](https://img.shields.io/badge/tests-86%20passed-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/tests-108%20passed-brightgreen.svg)]()
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue.svg)]()
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110%2B-009688.svg)]()
 [![MCP](https://img.shields.io/badge/MCP-1.0%2B-purple.svg)]()
@@ -12,6 +12,7 @@
 ## Highlights
 
 - ⚡ **Hybrid Dual-Citizen ASGI Mount:** Mounts directly onto any existing `FastAPI` instance in-process over standard ASGI—zero external proxying, zero hanging subprocesses.
+- 🔌 **Local stdio CLI Runner & Desktop AI Bridge:** Run `fast-mcp stdio main:app` or `python -m fast_mcp stdio main:app` to connect desktop AI clients (Claude Desktop, Cursor) over standard I/O pipes with zero network setup.
 - 🔍 **Route Reflection:** Opt-in tags (`tags=["mcp"]`) automatically convert FastAPI endpoints, Pydantic models, docstrings, path/query/body parameters into MCP tools.
 - 🛠️ **Custom AI Tools (`@mcp.tool`):** Define AI-tailored composite tools alongside reflected routes with automatic schema and docstring extraction.
 - 🔐 **ASGI Scope Bridging:** Client authorization headers (`Authorization: Bearer <token>`, cookies, API keys) captured during the MCP handshake are bridged into an in-memory ASGI `Request`, natively resolving FastAPI's `Depends()` and `Security()` providers without code changes.
@@ -192,6 +193,72 @@ Render rich interactive HTML/JS widgets directly in modern desktop AI clients (C
 )
 def live_dashboard() -> str:
     return '<iframe src="ui://store/dashboard" width="100%" height="400"></iframe>'
+```
+
+### 7. Local stdio CLI Runner & Desktop AI Bridge
+
+Connect desktop AI clients (Claude Desktop, Cursor) directly to your FastAPI backend or FastMCP instance over standard input/output (`stdio`) pipes with zero network setup, port conflicts, or external proxying.
+
+#### Command-Line Usage
+
+```bash
+# Run stdio runner pointing to FastAPI app or FastMCP instance
+fast-mcp stdio main:app
+
+# Or via Python module invocation
+python -m fast_mcp stdio main:app
+
+# Target attribute defaults to 'app' or 'mcp' if omitted:
+fast-mcp stdio main
+
+# The 'stdio' subcommand can also be omitted as default:
+fast-mcp main:app
+```
+
+#### Claude Desktop Configuration (`claude_desktop_config.json`)
+
+Configure Claude Desktop to launch your FastMCP server directly:
+
+```json
+{
+  "mcpServers": {
+    "my-fast-mcp-app": {
+      "command": "fast-mcp",
+      "args": ["stdio", "main:app"]
+    }
+  }
+}
+```
+
+Or using `uv` to manage the virtual environment automatically:
+
+```json
+{
+  "mcpServers": {
+    "my-fast-mcp-app": {
+      "command": "uv",
+      "args": ["run", "fast-mcp", "stdio", "main:app"]
+    }
+  }
+}
+```
+
+#### Programmatic Stdio Runner
+
+You can also run stdio mode programmatically from Python:
+
+```python
+import asyncio
+from fast_mcp import FastMCP, run_stdio
+
+mcp = FastMCP(name="my-stdio-server")
+
+@mcp.tool()
+def add(a: int, b: int) -> int:
+    return a + b
+
+if __name__ == "__main__":
+    asyncio.run(run_stdio(mcp))
 ```
 
 ---

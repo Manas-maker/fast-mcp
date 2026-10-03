@@ -65,10 +65,17 @@ class SearchToolsInput(BaseModel):
 
 
 class _SSEEndpoint:
-    def __init__(self, transport: SseServerTransport, server: Server, bridge: ASGIScopeBridge) -> None:
+    def __init__(
+        self,
+        transport: SseServerTransport,
+        server: Server,
+        bridge: ASGIScopeBridge,
+        mcp: FastMCP | None = None,
+    ) -> None:
         self.transport = transport
         self.server = server
         self.bridge = bridge
+        self._mcp = mcp
 
     async def __call__(self, scope: Any, receive: Any, send: Any) -> None:
         before_sessions = set(self.transport._read_stream_writers.keys())
@@ -197,6 +204,10 @@ class FastMCP:
 
         if self.enable_ui and self.include_inspector:
             self._register_builtin_inspector()
+
+        if self._app is not None:
+            setattr(self._app.state, "mcp", self)
+            setattr(self._app, "_mcp", self)
 
     @property
     def app(self) -> Any:
@@ -746,6 +757,8 @@ class FastMCP:
         if target_app is None:
             raise ValueError("No FastAPI application provided to mount.")
         self._app = target_app
+        setattr(target_app.state, "mcp", self)
+        setattr(target_app, "_mcp", self)
 
         if self._mounted:
             return
@@ -791,7 +804,7 @@ class FastMCP:
         target_app.routes.append(
             Route(
                 f"{self.mount_path}/sse",
-                endpoint=_SSEEndpoint(self.sse_transport, self.server, self.scope_bridge),
+                endpoint=_SSEEndpoint(self.sse_transport, self.server, self.scope_bridge, mcp=self),
                 methods=["GET"],
             )
         )
