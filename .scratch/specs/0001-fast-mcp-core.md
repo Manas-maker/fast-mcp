@@ -1,6 +1,6 @@
 # Specification: fast-mcp Core Framework (V1)
 
-**Status:** `ready-for-agent`  
+**Status:** `completed`  
 **Governing Documents:** [GLOSSARY.md](file:///c:/Users/Manas/Downloads/Repos/fast-mcp/GLOSSARY.md), [ADR 0001](file:///c:/Users/Manas/Downloads/Repos/fast-mcp/docs/adr/0001-architecture-foundation.md), [ADR 0002](file:///c:/Users/Manas/Downloads/Repos/fast-mcp/docs/adr/0002-dual-ui-auth-bridging-and-error-handling.md)  
 
 ---
