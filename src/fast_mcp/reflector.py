@@ -19,6 +19,7 @@ class ReflectedTool(MCPTool):
         route: APIRoute,
         body_param_names: list[str],
         body_models: dict[str, type[BaseModel]],
+        tags: list[str] | None = None,
     ) -> None:
         super().__init__(
             name=name,
@@ -28,7 +29,7 @@ class ReflectedTool(MCPTool):
             dependant=route.dependant,
             body_param_names=body_param_names,
             body_models=body_models,
-            tags=route.tags or [],
+            tags=tags if tags is not None else list(route.tags or []),
         )
         self.endpoint = endpoint
         self.route = route
@@ -70,6 +71,7 @@ class RouteReflector:
             route=route,
             body_param_names=body_param_names,
             body_models=body_models,
+            tags=list(route.tags or []),
         )
 
     def reflect_routes(self, routes: list[Any]) -> dict[str, ReflectedTool]:
