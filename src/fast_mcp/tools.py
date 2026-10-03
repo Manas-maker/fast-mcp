@@ -63,7 +63,7 @@ def build_tool_schema_and_models(
     dependant: Dependant,
     docstring_params: dict[str, str] | None = None,
 ) -> tuple[dict[str, Any], list[str], dict[str, type[BaseModel]], type[BaseModel] | None]:
-    """Inspect a function's Dependant and generate an MCP JSON schema and parameter mappings."""
+    """Inspect a function's Dependant and generate an MCP JSON schema, parameter mappings, and Pydantic validator model."""
     doc_params = docstring_params or {}
     fields: dict[str, Any] = {}
     body_param_names: list[str] = []
@@ -114,7 +114,7 @@ def build_tool_schema_and_models(
                 fkw["description"] = desc
             fields[param_name] = (annotation or Any, Field(**fkw))
 
-    # Build JSON Schema and input model
+    # Build JSON Schema & Validation Model
     if fields:
         model = create_model(f"{tool_name}_Input", **fields)
         input_schema = model.model_json_schema()
@@ -140,6 +140,8 @@ class MCPTool:
         body_models: dict[str, type[BaseModel]],
         tags: list[str] | None = None,
         input_model: type[BaseModel] | None = None,
+        meta: dict[str, Any] | None = None,
+        ui: str | dict[str, Any] | None = None,
     ) -> None:
         self.name = name
         self.description = description
@@ -150,6 +152,14 @@ class MCPTool:
         self.body_models = body_models
         self.tags = tags or []
         self.input_model = input_model
+
+        resolved_meta = dict(meta or {})
+        if ui is not None:
+            if isinstance(ui, str):
+                resolved_meta["ui"] = {"resourceUri": ui}
+            elif isinstance(ui, dict):
+                resolved_meta["ui"] = ui
+        self.meta = resolved_meta if resolved_meta else None
 
         # Create a dependency-only Dependant for solving FastAPI Depends() and Security()
         self.dependency_dependant = Dependant(
@@ -174,6 +184,7 @@ class MCPTool:
             name=self.name,
             description=self.description,
             inputSchema=self.input_schema,
+            _meta=self.meta,
         )
 
     async def invoke(
@@ -294,6 +305,8 @@ class CustomTool(MCPTool):
         name: str | None = None,
         description: str | None = None,
         tags: list[str] | None = None,
+        meta: dict[str, Any] | None = None,
+        ui: str | dict[str, Any] | None = None,
     ) -> CustomTool:
         tool_name = name or fn.__name__
         raw_doc = inspect.getdoc(fn) or ""
@@ -317,4 +330,6 @@ class CustomTool(MCPTool):
             body_models=body_models,
             tags=tags or [],
             input_model=input_model,
+            meta=meta,
+            ui=ui,
         )

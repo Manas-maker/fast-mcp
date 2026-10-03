@@ -21,6 +21,8 @@ class ReflectedTool(MCPTool):
         body_models: dict[str, type[BaseModel]],
         tags: list[str] | None = None,
         input_model: type[BaseModel] | None = None,
+        meta: dict[str, Any] | None = None,
+        ui: str | dict[str, Any] | None = None,
     ) -> None:
         super().__init__(
             name=name,
@@ -32,6 +34,8 @@ class ReflectedTool(MCPTool):
             body_models=body_models,
             tags=tags if tags is not None else list(route.tags or []),
             input_model=input_model,
+            meta=meta,
+            ui=ui,
         )
         self.endpoint = endpoint
         self.route = route
@@ -65,6 +69,13 @@ class RouteReflector:
             docstring_params=doc_params,
         )
 
+        # Extract meta / ui from openapi_extra if present
+        meta: dict[str, Any] | None = None
+        ui_val: Any = None
+        if getattr(route, "openapi_extra", None):
+            meta = route.openapi_extra.get("_meta") or route.openapi_extra.get("meta")
+            ui_val = route.openapi_extra.get("ui")
+
         return ReflectedTool(
             name=tool_name,
             description=description,
@@ -75,6 +86,8 @@ class RouteReflector:
             body_models=body_models,
             tags=list(route.tags or []),
             input_model=input_model,
+            meta=meta,
+            ui=ui_val,
         )
 
     def reflect_routes(self, routes: list[Any]) -> dict[str, ReflectedTool]:

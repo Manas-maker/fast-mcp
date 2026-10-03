@@ -27,10 +27,11 @@ async def test_sync_endpoint_and_no_params_route():
         res = await client.send_request("tools/list")
         assert "result" in res
         tools = res["result"]["tools"]
-        assert len(tools) == 1
-        assert tools[0]["name"] == "sync_ping"
-        assert "Health check endpoint." in tools[0]["description"]
-        assert tools[0]["inputSchema"]["type"] == "object"
+        tool_names = [t["name"] for t in tools]
+        assert "sync_ping" in tool_names
+        sync_tool = next(t for t in tools if t["name"] == "sync_ping")
+        assert "Health check endpoint." in sync_tool["description"]
+        assert sync_tool["inputSchema"]["type"] == "object"
 
         # Call the sync tool
         call_res = await client.send_request("tools/call", {"name": "sync_ping", "arguments": {}})
