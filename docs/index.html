@@ -615,16 +615,63 @@
       color: var(--text);
     }
 
-    /* Seam Diagram Box */
-    .diagram-box {
+    /* Seam Architecture Diagram & Pipeline */
+    .architecture-container {
+      margin: 28px 0;
+      border: 1px solid var(--border);
+      background-color: var(--surface);
+      padding: 24px;
+    }
+
+    .diagram-svg-wrap {
+      width: 100%;
+      overflow-x: auto;
+      margin-bottom: 24px;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .diagram-svg-wrap svg {
+      width: 100%;
+      min-width: 860px;
+      height: auto;
+      display: block;
+    }
+
+    .pipeline-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 16px;
+      border-top: 1px solid var(--border);
+      padding-top: 20px;
+    }
+
+    .pipeline-step {
       background-color: var(--surface-subtle);
       border: 1px solid var(--border);
-      padding: 24px;
-      font-family: var(--font-mono);
+      padding: 16px;
       font-size: 13px;
-      line-height: 1.45;
-      overflow-x: auto;
-      margin: 24px 0;
+    }
+
+    .pipeline-step-num {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--accent);
+      font-weight: 700;
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+    }
+
+    .pipeline-step-title {
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    .pipeline-step-desc {
+      color: var(--text-muted);
+      line-height: 1.5;
+      font-size: 12.5px;
     }
 
     /* API Search Bar */
@@ -1340,32 +1387,135 @@ if __name__ == "__main__":
         </div>
       </div>
 
-      <div class="diagram-box">
-+-----------------------------------------------------------------------------------+
-|                            FASTAPI APPLICATION RUNTIME                             |
-|                                                                                   |
-|  [Incoming Client Request]                                                        |
-|         │                                                                         |
-|         ├─── GET /mcp/sse ────────────► SseServerTransport (Handshake Scope)      |
-|         │                                      │                                  |
-|         │                                      ▼                                  |
-|         │                              ASGIScopeBridge                            |
-|         │                           (Records SSE/POST Scope)                      |
-|         │                                      │                                  |
-|         ├─── POST /mcp/messages                ▼                                  |
-|         │    {"method": "tools/call"} ─► Synthesized Request (In-Memory ASGI)     |
-|         │                                      │                                  |
-|         │                                      ▼                                  |
-|         │                            FastAPI solve_dependencies()                 |
-|         │                         (Resolves Depends & Security)                   |
-|         │                                      │                                  |
-|         │                                      ▼                                  |
-|         │                               Tool Invocation                           |
-|         │                         (Reflected or Custom Tool)                      |
-|         │                                      │                                  |
-|         │                                      ▼                                  |
-|         └───────────────────────────► CallToolResult Serialization                |
-+-----------------------------------------------------------------------------------+
+      <div class="architecture-container">
+        <div class="diagram-svg-wrap">
+          <svg viewBox="0 0 940 350" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Dual-Citizen ASGI Seam Architecture Diagram">
+            <defs>
+              <marker id="arrow" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="var(--text-muted)" />
+              </marker>
+              <marker id="arrow-accent" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="var(--accent)" />
+              </marker>
+            </defs>
+
+            <!-- Outer Canvas Box: FastAPI Application Runtime -->
+            <rect x="10" y="10" width="920" height="330" rx="3" fill="var(--surface-subtle)" stroke="var(--border-dark)" stroke-width="1.2" />
+            <text x="28" y="38" font-family="var(--font-sans)" font-size="11" font-weight="700" letter-spacing="1.2" fill="var(--text-faint)">FASTAPI APPLICATION RUNTIME (IN-PROCESS ASGI SEAM)</text>
+            <line x1="10" y1="48" x2="930" y2="48" stroke="var(--border)" stroke-width="1" />
+
+            <!-- Node 1: AI Client / Agent -->
+            <rect x="28" y="85" width="165" height="175" rx="2" fill="var(--surface)" stroke="var(--border)" stroke-width="1.2" />
+            <text x="42" y="112" font-family="var(--font-mono)" font-size="11" font-weight="700" fill="var(--accent)">CLIENT TIER</text>
+            <text x="42" y="136" font-family="var(--font-sans)" font-size="15" font-weight="700" fill="var(--text)">AI Agent</text>
+            <text x="42" y="156" font-family="var(--font-sans)" font-size="12" fill="var(--text-muted)">Claude Desktop</text>
+            <text x="42" y="172" font-family="var(--font-sans)" font-size="12" fill="var(--text-muted)">Cursor IDE / LLM</text>
+            <text x="42" y="188" font-family="var(--font-sans)" font-size="12" fill="var(--text-muted)">Python MCP Client</text>
+            <rect x="42" y="210" width="137" height="28" rx="2" fill="var(--tag-bg)" />
+            <text x="50" y="228" font-family="var(--font-mono)" font-size="10.5" fill="var(--text)">Bearer Token Auth</text>
+
+            <!-- Connectors from Client to Endpoints -->
+            <path d="M 193 130 L 253 115" fill="none" stroke="var(--text-muted)" stroke-width="1.5" marker-end="url(#arrow)" />
+            <text x="198" y="118" font-family="var(--font-mono)" font-size="10" fill="var(--text-faint)">GET /sse</text>
+
+            <path d="M 193 210 L 253 225" fill="none" stroke="var(--text-muted)" stroke-width="1.5" marker-end="url(#arrow)" />
+            <text x="196" y="235" font-family="var(--font-mono)" font-size="10" fill="var(--text-faint)">POST /msg</text>
+
+            <!-- Node 2A: SseServerTransport -->
+            <rect x="255" y="75" width="180" height="80" rx="2" fill="var(--surface)" stroke="var(--border)" stroke-width="1.2" />
+            <text x="270" y="98" font-family="var(--font-mono)" font-size="10.5" font-weight="700" fill="var(--accent)">TRANSPORT</text>
+            <text x="270" y="120" font-family="var(--font-sans)" font-size="14" font-weight="600" fill="var(--text)">SseServerTransport</text>
+            <text x="270" y="139" font-family="var(--font-sans)" font-size="12" fill="var(--text-muted)">Captures Handshake Scope</text>
+
+            <!-- Node 2B: POST Messages Endpoint -->
+            <rect x="255" y="185" width="180" height="80" rx="2" fill="var(--surface)" stroke="var(--border)" stroke-width="1.2" />
+            <text x="270" y="208" font-family="var(--font-mono)" font-size="10.5" font-weight="700" fill="var(--accent)">DISPATCHER</text>
+            <text x="270" y="230" font-family="var(--font-sans)" font-size="14" font-weight="600" fill="var(--text)">/mcp/messages</text>
+            <text x="270" y="249" font-family="var(--font-sans)" font-size="12" fill="var(--text-muted)">JSON-RPC: tools/call</text>
+
+            <!-- Connectors to ASGIScopeBridge -->
+            <path d="M 435 115 L 478 145" fill="none" stroke="var(--text-muted)" stroke-width="1.5" marker-end="url(#arrow)" />
+            <path d="M 435 225 L 478 195" fill="none" stroke="var(--text-muted)" stroke-width="1.5" marker-end="url(#arrow)" />
+
+            <!-- Node 3: ASGIScopeBridge & Dependency Injection (Core Seam) -->
+            <rect x="480" y="70" width="220" height="205" rx="2" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.8" />
+            <rect x="480" y="70" width="220" height="26" rx="2" fill="var(--accent-bg)" />
+            <text x="495" y="88" font-family="var(--font-mono)" font-size="10.5" font-weight="700" fill="var(--accent)">CORE ARCHITECTURAL SEAM</text>
+            
+            <text x="495" y="120" font-family="var(--font-sans)" font-size="15" font-weight="700" fill="var(--text)">ASGIScopeBridge</text>
+            <text x="495" y="140" font-family="var(--font-sans)" font-size="12" fill="var(--text-muted)">Reconstructs in-memory Request</text>
+            <text x="495" y="156" font-family="var(--font-sans)" font-size="12" fill="var(--text-muted)">Preserves Headers &amp; Cookies</text>
+            
+            <line x1="495" y1="172" x2="685" y2="172" stroke="var(--border)" stroke-width="1" stroke-dasharray="3 3" />
+            
+            <text x="495" y="196" font-family="var(--font-sans)" font-size="14" font-weight="600" fill="var(--text)">solve_dependencies()</text>
+            <text x="495" y="216" font-family="var(--font-sans)" font-size="12" fill="var(--text-muted)">FastAPI Depends() &amp; Security()</text>
+            <text x="495" y="232" font-family="var(--font-sans)" font-size="12" fill="var(--text-muted)">DB sessions, Auth providers</text>
+
+            <!-- Connector to Tool Execution -->
+            <path d="M 700 135 L 738 115" fill="none" stroke="var(--accent)" stroke-width="1.8" marker-end="url(#arrow-accent)" />
+            <text x="702" y="120" font-family="var(--font-mono)" font-size="10" fill="var(--accent)">Args</text>
+
+            <!-- Node 4: Tool Invocation -->
+            <rect x="742" y="75" width="168" height="90" rx="2" fill="var(--surface)" stroke="var(--border)" stroke-width="1.2" />
+            <text x="756" y="98" font-family="var(--font-mono)" font-size="10.5" font-weight="700" fill="var(--accent)">EXECUTION</text>
+            <text x="756" y="120" font-family="var(--font-sans)" font-size="14" font-weight="600" fill="var(--text)">Tool Invocation</text>
+            <text x="756" y="139" font-family="var(--font-sans)" font-size="12" fill="var(--text-muted)">Reflected Endpoint</text>
+            <text x="756" y="154" font-family="var(--font-sans)" font-size="11.5" fill="var(--text-muted)">or Custom @mcp.tool</text>
+
+            <!-- Connector from Tool to Serialization -->
+            <path d="M 826 165 L 826 180" fill="none" stroke="var(--text-muted)" stroke-width="1.5" marker-end="url(#arrow)" />
+
+            <!-- Node 5: Serialization & Shielded Return -->
+            <rect x="742" y="185" width="168" height="90" rx="2" fill="var(--surface)" stroke="var(--border)" stroke-width="1.2" />
+            <text x="756" y="208" font-family="var(--font-mono)" font-size="10.5" font-weight="700" fill="var(--accent)">RESULT TRAP</text>
+            <text x="756" y="230" font-family="var(--font-sans)" font-size="14" font-weight="600" fill="var(--text)">CallToolResult</text>
+            <text x="756" y="249" font-family="var(--font-sans)" font-size="12" fill="var(--text-muted)">Minified JSON / MRO</text>
+            <text x="756" y="264" font-family="var(--font-sans)" font-size="11" fill="var(--text-faint)">HTTPException shielded</text>
+
+            <!-- Return Path from CallToolResult back to Client -->
+            <path d="M 742 245 L 712 245 L 712 300 L 110 300 L 110 262" fill="none" stroke="var(--text-muted)" stroke-width="1.2" stroke-dasharray="4 4" marker-end="url(#arrow)" />
+            <text x="360" y="295" font-family="var(--font-mono)" font-size="10.5" fill="var(--text-muted)">Streamed SSE Protocol Response (CallToolResult)</text>
+          </svg>
+        </div>
+
+        <div class="pipeline-grid">
+          <div class="pipeline-step">
+            <div class="pipeline-step-num">STAGE 01</div>
+            <div class="pipeline-step-title">Handshake &amp; Calls</div>
+            <div class="pipeline-step-desc">
+              AI client establishes SSE stream on <span class="code-inline">/mcp/sse</span> and posts JSON-RPC tool invocations to <span class="code-inline">/mcp/messages</span>.
+            </div>
+          </div>
+          <div class="pipeline-step">
+            <div class="pipeline-step-num">STAGE 02</div>
+            <div class="pipeline-step-title">Scope Bridging</div>
+            <div class="pipeline-step-desc">
+              <span class="code-inline">ASGIScopeBridge</span> extracts handshake headers (Bearer tokens, cookies) and synthesizes an in-memory ASGI <span class="code-inline">Request</span> context.
+            </div>
+          </div>
+          <div class="pipeline-step">
+            <div class="pipeline-step-num">STAGE 03</div>
+            <div class="pipeline-step-title">Dependency Solver</div>
+            <div class="pipeline-step-desc">
+              FastAPI’s native <span class="code-inline">solve_dependencies()</span> resolves <span class="code-inline">Depends()</span> and <span class="code-inline">Security()</span> providers with zero code modifications.
+            </div>
+          </div>
+          <div class="pipeline-step">
+            <div class="pipeline-step-num">STAGE 04</div>
+            <div class="pipeline-step-title">Tool Execution</div>
+            <div class="pipeline-step-desc">
+              Dispatches to reflected route endpoint or custom <span class="code-inline">@mcp.tool</span> handler with fully resolved parameters and async/sync runtime support.
+            </div>
+          </div>
+          <div class="pipeline-step">
+            <div class="pipeline-step-num">STAGE 05</div>
+            <div class="pipeline-step-title">Shielded Output</div>
+            <div class="pipeline-step-desc">
+              Traps route <span class="code-inline">HTTPException</span> into informative <span class="code-inline">isError=True</span>; serializes successful results to minified, token-efficient JSON.
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -1506,7 +1656,7 @@ async def test_mcp_endpoints_and_tools():
         <div>
           <h4 style="font-family: var(--font-serif); font-size: 18px; text-transform: none; margin-bottom: 8px;">mcp-fastapi (fast-mcp)</h4>
           <p style="color: var(--text-muted); font-size: 14px; line-height: 1.6; max-width: 320px;">
-            The FastAPI-native Model Context Protocol framework. Designed with flat, high-contrast, editorial typography. Zero external JavaScript frameworks.
+            The FastAPI-native Model Context Protocol framework.
           </p>
         </div>
         <div class="footer-col">
