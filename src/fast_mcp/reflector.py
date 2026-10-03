@@ -20,6 +20,7 @@ class ReflectedTool:
         route: APIRoute,
         body_param_names: list[str],
         body_models: dict[str, type[BaseModel]],
+        tags: list[str] | None = None,
     ) -> None:
         self.name = name
         self.description = description
@@ -28,6 +29,7 @@ class ReflectedTool:
         self.route = route
         self.body_param_names = body_param_names
         self.body_models = body_models
+        self.tags = list(tags if tags is not None else (route.tags or []))
 
     def to_mcp_tool(self) -> types.Tool:
         return types.Tool(
@@ -147,6 +149,7 @@ class RouteReflector:
             route=route,
             body_param_names=body_param_names,
             body_models=body_models,
+            tags=list(route.tags or []),
         )
 
     def reflect_routes(self, routes: list[Any]) -> dict[str, ReflectedTool]:
