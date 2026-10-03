@@ -7,9 +7,9 @@ A complete visual testing and interactive UI system. Mounts an embedded in-brows
 
 **Status:** ready-for-agent
 
-- [ ] Navigating to `/mcp/docs` in a browser renders an interactive web UI listing all available tools and allowing manual test calls.
-- [ ] Setting `enable_ui=False` in `FastMCP` disables the `/mcp/docs` route for headless production environments.
-- [ ] MCP tools can declare `_meta.ui.resourceUri` pointing to HTML resources via the `ui://` scheme conforming to SEP-1865.
-- [ ] A built-in `inspect()` tool is registered that returns an MCP App iframe for viewing server status directly inside desktop AI clients.
-- [ ] Developers can use `@mcp.app(name="...")` to return interactive HTML widgets for their own endpoints.
-- [ ] Static UI assets are bundled cleanly without requiring Node.js at runtime.
+- [x] Navigating to `/mcp/docs` in a browser renders an interactive web UI listing all available tools and allowing manual test calls.
+- [x] Setting `enable_ui=False` in `FastMCP` disables the `/mcp/docs` route for headless production environments.
+- [x] MCP tools can declare `_meta.ui.resourceUri` pointing to HTML resources via the `ui://` scheme conforming to SEP-1865.
+- [x] A built-in `inspect()` tool is registered that returns an MCP App iframe for viewing server status directly inside desktop AI clients.
+- [x] Developers can use `@mcp.app(name="...")` to return interactive HTML widgets for their own endpoints.
+- [x] Static UI assets are bundled cleanly without requiring Node.js at runtime.

@@ -138,6 +138,8 @@ class MCPTool:
         body_param_names: list[str],
         body_models: dict[str, type[BaseModel]],
         tags: list[str] | None = None,
+        meta: dict[str, Any] | None = None,
+        ui: str | dict[str, Any] | None = None,
     ) -> None:
         self.name = name
         self.description = description
@@ -147,6 +149,14 @@ class MCPTool:
         self.body_param_names = body_param_names
         self.body_models = body_models
         self.tags = tags or []
+
+        resolved_meta = dict(meta or {})
+        if ui is not None:
+            if isinstance(ui, str):
+                resolved_meta["ui"] = {"resourceUri": ui}
+            elif isinstance(ui, dict):
+                resolved_meta["ui"] = ui
+        self.meta = resolved_meta if resolved_meta else None
 
         # Create a dependency-only Dependant for solving FastAPI Depends() and Security()
         self.dependency_dependant = Dependant(
@@ -171,6 +181,7 @@ class MCPTool:
             name=self.name,
             description=self.description,
             inputSchema=self.input_schema,
+            _meta=self.meta,
         )
 
     async def invoke(
@@ -250,6 +261,8 @@ class CustomTool(MCPTool):
         name: str | None = None,
         description: str | None = None,
         tags: list[str] | None = None,
+        meta: dict[str, Any] | None = None,
+        ui: str | dict[str, Any] | None = None,
     ) -> CustomTool:
         tool_name = name or fn.__name__
         raw_doc = inspect.getdoc(fn) or ""
@@ -272,4 +285,6 @@ class CustomTool(MCPTool):
             body_param_names=body_param_names,
             body_models=body_models,
             tags=tags or [],
+            meta=meta,
+            ui=ui,
         )

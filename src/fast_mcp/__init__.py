@@ -1,3 +1,4 @@
+from fast_mcp.apps import MCPApp, MCPAppRegistry, UIResource
 from fast_mcp.bridge import ASGIScopeBridge, get_current_request, get_current_scope
 from fast_mcp.reflector import ReflectedTool, RouteReflector
 from fast_mcp.router import BaseToolRouter, KeywordTagRouter
@@ -15,4 +16,7 @@ __all__ = [
     "RouteReflector",
     "BaseToolRouter",
     "KeywordTagRouter",
+    "MCPApp",
+    "MCPAppRegistry",
+    "UIResource",
 ]
