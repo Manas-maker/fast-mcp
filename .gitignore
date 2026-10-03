@@ -1,3 +1,11 @@
 .agents/
 skills-lock.json
 *.stackdump
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+.pytest_cache/
+*.egg-info/
+dist/
+build/

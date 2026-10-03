@@ -1,0 +1,29 @@
+[project]
+name = "fast-mcp"
+version = "0.1.0"
+description = "FastAPI-native Model Context Protocol framework"
+authors = [
+    { name = "Manas Pradhan", email = "64654573+Manas-maker@users.noreply.github.com" }
+]
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.110.0",
+    "mcp>=1.0.0",
+    "pydantic>=2.0",
+    "starlette>=0.35.0",
+]
+
+[build-system]
+requires = ["uv_build>=0.12.14,<0.13.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["src", "."]
+asyncio_mode = "auto"

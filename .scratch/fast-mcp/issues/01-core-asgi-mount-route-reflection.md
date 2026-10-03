@@ -5,10 +5,10 @@ A minimal `FastMCP` class that mounts directly onto an existing FastAPI applicat
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** completed
 
-- [ ] `FastMCP(app)` can be initialized and mounted to a FastAPI application using `mcp.mount()`.
-- [ ] Endpoints tagged with `tags=["mcp"]` appear in the `tools/list` response with correct names, descriptions, and JSON Schemas derived from their Pydantic and primitive parameters.
-- [ ] Routes without the opt-in tag are NOT exposed in `tools/list`.
-- [ ] Calling an exposed tool via `tools/call` over the ASGI SSE transport successfully invokes the underlying FastAPI route handler and returns the serialized result.
-- [ ] All tests run through the ASGI Protocol Seam using `httpx.AsyncClient` with `ASGITransport(app=app)`.
+- [x] `FastMCP(app)` can be initialized and mounted to a FastAPI application using `mcp.mount()`.
+- [x] Endpoints tagged with `tags=["mcp"]` appear in the `tools/list` response with correct names, descriptions, and JSON Schemas derived from their Pydantic and primitive parameters.
+- [x] Routes without the opt-in tag are NOT exposed in `tools/list`.
+- [x] Calling an exposed tool via `tools/call` over the ASGI SSE transport successfully invokes the underlying FastAPI route handler and returns the serialized result.
+- [x] All tests run through the ASGI Protocol Seam using `httpx.AsyncClient` with `ASGITransport(app=app)`.
