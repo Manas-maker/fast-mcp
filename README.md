@@ -25,13 +25,13 @@
 ## Installation
 
 ```bash
-pip install fast-mcp
+pip install mcp-fastapi
 ```
 
 Or using `uv`:
 
 ```bash
-uv add fast-mcp
+uv add mcp-fastapi
 ```
 
 ---
@@ -279,10 +279,12 @@ pytest --cov=fast_mcp --cov-report=term-missing
 
 ## Specification & Architectural Documents
 
-- [Specification: fast-mcp Core Framework (V1)](file:///docs/specs/0001-fast-mcp-core.md)
-- [GLOSSARY.md](file:///GLOSSARY.md)
-- [ADR 0001: Architecture Foundation and Hybrid Scope](file:///docs/adr/0001-architecture-foundation.md)
-- [ADR 0002: Dual-UI, ASGI Scope Bridging, and Resilient Error Handling](file:///docs/adr/0002-dual-ui-auth-bridging-and-error-handling.md)
+- [Interactive Documentation Website](https://manas-maker.github.io/fast-mcp/)
+- [AI Agent Index (llms.txt)](https://manas-maker.github.io/fast-mcp/llms.txt)
+- [Specification: fast-mcp Core Framework (V1)](docs/specs/0001-fast-mcp-core.md)
+- [GLOSSARY.md](GLOSSARY.md)
+- [ADR 0001: Architecture Foundation and Hybrid Scope](docs/adr/0001-architecture-foundation.md)
+- [ADR 0002: Dual-UI, ASGI Scope Bridging, and Resilient Error Handling](docs/adr/0002-dual-ui-auth-bridging-and-error-handling.md)
 
 ---
 

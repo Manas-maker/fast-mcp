@@ -1,7 +1,8 @@
 [project]
-name = "fast-mcp"
+name = "mcp-fastapi"
 version = "0.1.0"
 description = "FastAPI-native Model Context Protocol framework"
+readme = "README.md"
 authors = [
     { name = "Manas Pradhan", email = "64654573+Manas-maker@users.noreply.github.com" }
 ]
@@ -16,10 +17,14 @@ dependencies = [
 
 [project.scripts]
 fast-mcp = "fast_mcp.cli:main"
+mcp-fastapi = "fast_mcp.cli:main"
 
 [build-system]
-requires = ["uv_build>=0.12.14,<0.13.0"]
-build-backend = "uv_build"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/fast_mcp"]
 
 [dependency-groups]
 dev = [

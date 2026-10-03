@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://manas-maker.github.io/fast-mcp/sitemap.xml

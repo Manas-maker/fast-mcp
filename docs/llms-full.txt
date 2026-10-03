@@ -1,0 +1,701 @@
+# mcp-fastapi (fast-mcp) — Complete Reference Documentation for LLMs
+
+> Package: `mcp-fastapi`
+> Module: `fast_mcp`
+> Repository: https://github.com/Manas-maker/fast-mcp
+> Website: https://manas-maker.github.io/fast-mcp/
+> PyPI: https://pypi.org/project/mcp-fastapi/
+> License: MIT
+> Python Version: >=3.11
+
+---
+
+## Table of Contents
+
+1. Architecture & Design Philosophy
+2. Installation & Quickstart
+3. Complete Module & API Reference
+   - fast_mcp.server.FastMCP
+   - fast_mcp.tools.MCPTool & CustomTool
+   - fast_mcp.reflector.RouteReflector & ReflectedTool
+   - fast_mcp.bridge.ASGIScopeBridge & Context Getters
+   - fast_mcp.router.BaseToolRouter & KeywordTagRouter
+   - fast_mcp.apps.MCPApp, MCPAppRegistry & UIResource
+   - fast_mcp.cli.run_stdio & CLI Runner
+   - Error Handling & Validation
+4. Deep Architectural Patterns & Code Recipes
+   - Recipe 1: Automatic Route Reflection
+   - Recipe 2: Custom AI Composite Tools
+   - Recipe 3: ASGI Scope Bridging & Dependency Injection
+   - Recipe 4: Dynamic Progressive Tool Discovery
+   - Recipe 5: Error Interception & Custom Serializers
+   - Recipe 6: Embedded Browser Inspector & In-Chat MCP Apps (SEP-1865)
+   - Recipe 7: Local stdio CLI & Desktop AI Bridge
+5. MCP Client Configuration Guide (Claude Desktop & Cursor)
+6. Supported Capabilities & Registry Manifests
+7. Integration Testing with Pytest and ASGI Transport
+
+---
+
+## 1. Architecture & Design Philosophy
+
+`mcp-fastapi` provides a native, in-process bridge between FastAPI applications and the Model Context Protocol (MCP). Traditional MCP servers either run as standalone processes that cannot access existing API route logic or require external network proxies. `mcp-fastapi` operates as a **Dual-Citizen ASGI Mount**:
+
+1. **In-Process ASGI Mount**: Binds directly onto FastAPI via `mcp.mount()`. Endpoints for SSE (`/mcp/sse`), POST messages (`/mcp/messages`), and browser inspection (`/mcp/docs`) are served by the same ASGI server (e.g. Uvicorn, Hypercorn, Gunicorn).
+2. **ASGI Scope Bridging**: When an AI client initiates an SSE handshake or posts a message with authorization headers (`Authorization: Bearer <token>`, cookies, custom headers), `fast-mcp` captures the ASGI `scope`. When an AI invokes a tool, `fast-mcp` synthesizes an in-memory Starlette `Request` object and invokes FastAPI's `solve_dependencies()`. This resolves `Depends()`, `Security()`, and header dependencies natively without changing any endpoint code.
+3. **Resilient Error Recovery**: Instead of unhandled exceptions crashing the MCP transport, HTTP status exceptions (400, 401, 404, 422) and Pydantic validation errors are trapped and returned as `CallToolResult(is_error=True)` with clean, formatted error messages. This gives the calling LLM the actionable feedback needed to self-correct arguments in subsequent turns.
+4. **Context Window Protection**: Dynamic progressive discovery replaces the standard tool dump with baseline tools and a `search_tools` meta-tool when an API has many endpoints, preventing LLM context window saturation.
+5. **Dual UI & SEP-1865 MCP Apps**: Exposes an embedded developer UI at `/mcp/docs` and returns `ui://` custom scheme HTML iframe widgets for modern desktop AI interfaces (Claude Desktop, Cursor, VS Code).
+
+---
+
+## 2. Installation & Quickstart
+
+### Installation
+
+```bash
+pip install mcp-fastapi
+```
+
+Or using `uv`:
+```bash
+uv add mcp-fastapi
+```
+
+### Complete Minimal Working Example
+
+```python
+from fastapi import FastAPI, Depends, Header, HTTPException
+from pydantic import BaseModel, Field
+from fast_mcp import FastMCP
+import uvicorn
+
+app = FastAPI(title="Inventory API", version="1.0.0")
+mcp = FastMCP(app=app, name="inventory-server")
+
+# 1. Automatic Route Reflection
+class Item(BaseModel):
+    id: int
+    name: str
+    price: float
+    in_stock: bool = True
+
+@app.get("/items/{item_id}", tags=["mcp"])
+async def get_item(item_id: int) -> Item:
+    """Retrieve item details by identifier.
+
+    Args:
+        item_id: The unique numerical ID of the item.
+    """
+    if item_id == 999:
+        raise HTTPException(status_code=404, detail="Item not found")
+    return Item(id=item_id, name="Ergonomic Keyboard", price=89.99, in_stock=True)
+
+# 2. Custom AI Composite Tool with Authentication
+def authenticate(authorization: str = Header(...)) -> str:
+    if not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Missing Bearer token")
+    return authorization.split(" ")[1]
+
+@mcp.tool(name="calculate_discount", description="Calculate price after volume discount")
+def calculate_discount(price: float, quantity: int, user: str = Depends(authenticate)) -> dict:
+    discount_pct = 0.15 if quantity >= 10 else 0.05
+    final_price = price * quantity * (1.0 - discount_pct)
+    return {
+        "user": user,
+        "quantity": quantity,
+        "discount_percent": discount_pct * 100,
+        "total": round(final_price, 2)
+    }
+
+# 3. Mount MCP endpoints
+mcp.mount()
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="127.0.0.1", port=8000)
+```
+
+Run stdio mode directly for Claude Desktop / Cursor:
+```bash
+fast-mcp stdio main:app
+```
+
+---
+
+## 3. Complete Module & API Reference
+
+### Module: `fast_mcp.server`
+
+#### Class: `FastMCP`
+
+```python
+class FastMCP:
+    def __init__(
+        self,
+        app: FastAPI | None = None,
+        name: str = "fast-mcp",
+        version: str = "0.1.0",
+        mount_path: str = "/mcp",
+        route_tag: str = "mcp",
+        dynamic_discovery: bool = False,
+        router: BaseToolRouter | None = None,
+        baseline_tools: list[str] | set[str] | None = None,
+        baseline_tag: str = "baseline",
+        dynamic_discovery_threshold: int | None = None,
+        debug: bool = False,
+        enable_ui: bool = True,
+        include_inspector: bool = True,
+    ) -> None: ...
+```
+
+**Constructor Parameters**:
+- `app`: Optional `FastAPI` instance to bind. Can also be supplied later during `mcp.mount(app)`.
+- `name` (str): Server name reported during the MCP initialization handshake. Defaults to `"fast-mcp"`.
+- `version` (str): Server semver reported to MCP clients. Defaults to `"0.1.0"`.
+- `mount_path` (str): Base URL path prefix where MCP endpoints are mounted. Defaults to `"/mcp"`. Strips trailing slashes.
+- `route_tag` (str): The OpenAPI/FastAPI tag used to identify routes that should be automatically reflected as MCP tools. Defaults to `"mcp"`.
+- `dynamic_discovery` (bool): When `True`, replaces the full `tools/list` response with baseline tools and the `search_tools` discovery meta-tool.
+- `router` (`BaseToolRouter | None`): Custom router instance for tool scoring and ranking. Defaults to `KeywordTagRouter` when dynamic discovery is active.
+- `baseline_tools` (`list[str] | set[str] | None`): Set of tool names that are always visible in `tools/list` even under dynamic discovery.
+- `baseline_tag` (str): Tag name for tools that should always remain visible in `tools/list`. Defaults to `"baseline"`.
+- `dynamic_discovery_threshold` (`int | None`): Optional integer threshold. When the total number of registered tools exceeds this number, dynamic discovery activates automatically.
+- `debug` (bool): When `True`, tool exceptions return detailed traceback strings in the error payload. Defaults to `False`.
+- `enable_ui` (bool): When `True`, mounts the browser inspector at `{mount_path}/docs`. Defaults to `True`.
+- `include_inspector` (bool): When `True`, registers the built-in `inspect()` MCP App tool and `ui://fast-mcp/inspector` resource. Defaults to `True`.
+
+**Key Properties & Attributes**:
+- `app`: Returns `_AppProxy` wrapping the bound `FastAPI` app. Can be used as both an accessor (`mcp.app.get(...)`) and a decorator (`@mcp.app(...)`).
+- `server`: The underlying `mcp.server.lowlevel.Server` instance.
+- `sse_transport`: The `mcp.server.sse.SseServerTransport` instance handling SSE connections.
+- `scope_bridge`: The `ASGIScopeBridge` instance tracking SSE and POST scopes.
+- `reflector`: The `RouteReflector` instance that scans FastAPI routes.
+- `app_registry`: The `MCPAppRegistry` storing registered `UIResource` and `MCPApp` objects.
+- `is_dynamic_discovery_active` (bool): Property returning whether dynamic discovery is currently active.
+
+**Key Methods**:
+
+##### `mount(app: FastAPI | None = None) -> None`
+Mounts the MCP server endpoints onto the FastAPI application.
+- Reflects all routes with matching `route_tag`.
+- Registers `{mount_path}/docs` HTML inspector (if `enable_ui=True`).
+- Registers `{mount_path}/docs/tools` and `{mount_path}/docs/call` JSON endpoints.
+- Registers `{mount_path}/sse` GET endpoint for MCP SSE client handshakes.
+- Registers `{mount_path}/messages` POST endpoint for incoming JSON-RPC calls.
+
+##### `tool(name_or_func=None, *, name=None, description=None, tags=None, meta=None, ui=None) -> Callable`
+Decorator to register a custom AI tool on the `FastMCP` instance.
+- Supports both bare `@mcp.tool` and parameterized `@mcp.tool(...)` syntax.
+- `name` (str | None): Custom tool name. Defaults to function `__name__`.
+- `description` (str | None): Tool description. Defaults to cleaned docstring.
+- `tags` (list[str] | None): Search and routing tags.
+- `meta` (dict[str, Any] | None): Custom metadata dictionary passed to MCP `_meta`.
+- `ui` (str | dict[str, Any] | None): URI string (e.g. `"ui://store/dashboard"`) or dictionary describing interactive widget metadata.
+
+##### `serializer(type_or_func=None, *, target_type=None, **kwargs) -> Callable`
+Decorator to register a custom response serializer callable for a return type or model class.
+- Supports `@mcp.serializer(User)`, `@mcp.serializer`, or `@mcp.serializer(target_type=User)`.
+- If type is omitted, infers target type from the type annotation on the serializer function's first argument.
+- Supports inheritance resolution via Python MRO.
+
+##### `register_app(name_or_func=None, *, name=None, description=None, resource_uri=None, html=None, tags=None, meta=None) -> Any`
+Registers an interactive in-chat MCP App widget following the SEP-1865 specification.
+- Can be invoked as decorator `@mcp.register_app(...)` or through proxy `@mcp.app(...)`.
+- `resource_uri` defaults to `ui://{server_name}/{tool_name}`.
+- Automatically registers a backing `UIResource` in `app_registry`.
+
+##### `get_inspector_html() -> str`
+Generates the self-contained HTML bundle for the embedded web inspector, preloaded with registered tool schemas, resources, and server metadata.
+
+---
+
+### Module: `fast_mcp.tools`
+
+#### Class: `MCPTool`
+Base class for MCP tools with ASGI-bridged dependency resolution.
+
+```python
+class MCPTool:
+    def __init__(
+        self,
+        name: str,
+        description: str,
+        input_schema: dict[str, Any],
+        fn: Callable[..., Any],
+        dependant: Dependant,
+        body_param_names: list[str],
+        body_models: dict[str, type[BaseModel]],
+        tags: list[str] | None = None,
+        input_model: type[BaseModel] | None = None,
+        meta: dict[str, Any] | None = None,
+        ui: str | dict[str, Any] | None = None,
+    ) -> None: ...
+```
+
+**Methods**:
+- `to_mcp_tool() -> types.Tool`: Converts tool into official `mcp.types.Tool` object with JSON schema and `_meta`.
+- `async invoke(arguments: dict[str, Any] | None = None, request: Request | None = None, app: Any = None) -> Any`: Validates inputs via Pydantic model, resolves FastAPI dependencies via `solve_dependencies()`, and executes the underlying coroutine or sync function in `asyncio.to_thread`.
+
+#### Class: `CustomTool`
+Subclass of `MCPTool` representing a custom AI tool registered via `@mcp.tool`.
+
+**Methods**:
+- `classmethod from_func(fn, name=None, description=None, tags=None, meta=None, ui=None) -> CustomTool`: Inspects callable signature and docstring to automatically build JSON schema, parameter models, and Dependant graph.
+
+#### Helper Functions:
+- `parse_docstring_params(doc: str | None) -> dict[str, str]`: Parses argument descriptions from Google-style, Sphinx-style, and NumPy-style docstrings.
+- `build_tool_schema_and_models(...)`: Generates MCP input JSON schema and Pydantic validator models from a FastAPI `Dependant`.
+
+---
+
+### Module: `fast_mcp.reflector`
+
+#### Class: `RouteReflector`
+Inspects FastAPI `APIRoute` instances and generates corresponding `ReflectedTool` instances.
+
+```python
+class RouteReflector:
+    def __init__(self, tag: str = "mcp") -> None: ...
+    def reflect_route(self, route: APIRoute) -> ReflectedTool | None: ...
+    def reflect_routes(self, routes: list[Any]) -> dict[str, ReflectedTool]: ...
+```
+
+- Traverses routes recursively, including mounted sub-routers.
+- Filters routes by checking `self.tag in route.tags`.
+- Reads `route.openapi_extra` for custom `_meta` or `ui` definitions.
+
+#### Class: `ReflectedTool`
+Subclass of `MCPTool` representing a reflected FastAPI route exposed as an MCP tool. Stores references to original `endpoint` and `APIRoute`.
+
+---
+
+### Module: `fast_mcp.bridge`
+
+#### Class: `ASGIScopeBridge`
+Bridges incoming SSE handshake and HTTP POST scopes into unified in-memory ASGI request contexts.
+
+```python
+class ASGIScopeBridge:
+    def record_sse_scope(self, session_id: str, scope: Scope) -> None: ...
+    def remove_session(self, session_id: str) -> None: ...
+    def record_message_scope(self, session_id: str, scope: Scope) -> None: ...
+    def get_scoped_context(self, session_id: str | None, current_msg_scope: Scope | None) -> dict[str, Any]: ...
+    def synthesize_request(self, scope: dict[str, Any] | None, args: dict[str, Any] | None, app: Any, astack: Any) -> Request: ...
+```
+
+#### Context Getters:
+- `get_current_request() -> Request | None`: Returns the active synthesized Starlette/FastAPI `Request` object for the currently running tool invocation.
+- `get_current_scope() -> dict[str, Any] | None`: Returns the active ASGI `scope` dictionary.
+
+---
+
+### Module: `fast_mcp.router`
+
+#### Class: `BaseToolRouter` (Abstract Base Class)
+```python
+class BaseToolRouter(ABC):
+    @abstractmethod
+    def select_tools(
+        self,
+        query: str,
+        candidate_tools: list[Any],
+        top_k: int | None = None,
+    ) -> list[Any] | Any: ...
+```
+
+#### Class: `KeywordTagRouter`
+Default zero-dependency tool router. Ranks candidate tools based on:
+1. Exact name match (highest weight).
+2. Word prefix and sub-token match (camelCase, snake_case, kebab-case decomposition).
+3. Tag match.
+4. Description token overlap with simple English plural normalization.
+
+---
+
+### Module: `fast_mcp.apps`
+
+#### Class: `UIResource`
+Represents an interactive MCP UI resource following SEP-1865.
+- `uri` (str): Unique URI (e.g., `ui://fast-mcp/inspector`).
+- `name` (str): Resource human-readable name.
+- `description` (str): Resource description.
+- `mime_type` (str): Typically `"text/html"`.
+- `async get_content() -> str`: Resolves HTML content (supports sync strings, callables, and async coroutines).
+- `to_mcp_resource() -> types.Resource`: Converts to official MCP `Resource` structure.
+
+#### Class: `MCPApp`
+Subclass of `CustomTool` representing an interactive in-chat MCP App widget. Includes `_meta.ui.resourceUri` in tool metadata.
+
+#### Class: `MCPAppRegistry`
+Registry storing `UIResource` objects. Handles resource lookup and reading during `resources/list` and `resources/read`.
+
+---
+
+### Module: `fast_mcp.cli`
+
+#### Function: `run_stdio(mcp_or_app: FastMCP | FastAPI, mount_path: str | None = None) -> None`
+Async function executing the MCP server over standard I/O (stdin/stdout) for desktop AI clients.
+
+#### CLI Command: `fast-mcp` / `mcp-fastapi`
+```bash
+# Syntax:
+fast-mcp stdio <target> [--mount-path <path>]
+# Short form (defaults to stdio subcommand):
+fast-mcp <target>
+```
+
+Where `<target>` is `module:attribute` (e.g. `main:app` or `main:mcp`). If attribute is omitted (e.g. `fast-mcp main`), looks for `app` or `mcp`.
+
+---
+
+### Module: `fast_mcp.server.format_validation_error`
+Formats Pydantic or FastAPI validation errors into clean, human-readable strings:
+```python
+def format_validation_error(exc: Any) -> str: ...
+```
+Extracts `loc` (excluding `"body"`) and `msg` to generate concise error lines like:
+```text
+Validation error:
+- item_id: Input should be a valid integer, unable to parse string as an integer
+- price: Field required
+```
+
+---
+
+## 4. Deep Architectural Patterns & Code Recipes
+
+### Recipe 1: Automatic Route Reflection
+
+Routes with `tags=["mcp"]` are inspected on mount:
+
+```python
+from fastapi import FastAPI, Query
+from pydantic import BaseModel, Field
+from fast_mcp import FastMCP
+
+app = FastAPI()
+mcp = FastMCP(app=app)
+
+class CreateUserInput(BaseModel):
+    username: str = Field(description="Unique username")
+    email: str = Field(description="Contact email address")
+    age: int = Field(ge=18, description="User age (minimum 18)")
+
+@app.post("/users", tags=["mcp"])
+async def create_user(
+    user: CreateUserInput,
+    send_welcome_email: bool = Query(default=True, description="Whether to dispatch welcome email")
+) -> dict:
+    """Create a new user profile in the database.
+
+    Args:
+        user: User registration specification.
+        send_welcome_email: Set to true to send instant verification email.
+    """
+    return {"id": 101, "username": user.username, "status": "active"}
+
+mcp.mount()
+```
+
+---
+
+### Recipe 2: Custom AI Composite Tools
+
+```python
+@mcp.tool(name="batch_process_orders", description="Process multiple orders concurrently")
+async def batch_process_orders(order_ids: list[str], dry_run: bool = False) -> dict:
+    """Process a batch of order IDs.
+
+    Args:
+        order_ids: List of order IDs to process.
+        dry_run: When True, simulates processing without charging accounts.
+    """
+    results = [{"id": oid, "status": "simulated" if dry_run else "executed"} for oid in order_ids]
+    return {"processed": len(results), "items": results}
+```
+
+---
+
+### Recipe 3: ASGI Scope Bridging & Dependency Injection
+
+```python
+from fastapi import FastAPI, Depends, Header, HTTPException
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fast_mcp import FastMCP, get_current_request
+
+app = FastAPI()
+mcp = FastMCP(app=app)
+
+security = HTTPBearer()
+
+def verify_token(creds: HTTPAuthorizationCredentials = Depends(security)) -> dict:
+    token = creds.credentials
+    if token != "secret-token-123":
+        raise HTTPException(status_code=401, detail="Unauthorized: invalid bearer token")
+    return {"user_id": "usr_42", "scope": "admin"}
+
+@mcp.tool
+async def read_admin_metrics(user: dict = Depends(verify_token)) -> dict:
+    req = get_current_request()
+    client_ip = req.client.host if req and req.client else "unknown"
+    return {"admin": user["user_id"], "ip": client_ip, "active_sessions": 88}
+
+mcp.mount()
+```
+
+---
+
+### Recipe 4: Dynamic Progressive Tool Discovery
+
+```python
+from fast_mcp import FastMCP
+from fast_mcp.router import BaseToolRouter
+
+class EmbeddingSemanticRouter(BaseToolRouter):
+    def select_tools(self, query: str, candidate_tools: list, top_k: int | None = 5):
+        # Implement vector search or custom domain ranking
+        return candidate_tools[:top_k]
+
+mcp = FastMCP(
+    app=app,
+    dynamic_discovery=True,
+    router=EmbeddingSemanticRouter(),
+    baseline_tools=["search_tools", "get_system_health"],
+    baseline_tag="core",
+)
+```
+
+---
+
+### Recipe 5: Error Interception & Custom Serializers
+
+```python
+from pydantic import BaseModel
+from fast_mcp import FastMCP
+
+app = FastAPI()
+mcp = FastMCP(app=app)
+
+class AnalysisReport(BaseModel):
+    title: str
+    summary: str
+    score: float
+
+@mcp.serializer(AnalysisReport)
+def format_analysis(report: AnalysisReport) -> str:
+    return f"# {report.title}\n**Score: {report.score}/10**\n\n{report.summary}"
+
+@mcp.tool
+def generate_report(project_id: str) -> AnalysisReport:
+    return AnalysisReport(
+        title=f"Report for {project_id}",
+        summary="All systems nominal with zero defects.",
+        score=9.8
+    )
+```
+
+---
+
+### Recipe 6: Embedded Browser Inspector & In-Chat MCP Apps (SEP-1865)
+
+```python
+@mcp.app(
+    name="order_dashboard",
+    resource_uri="ui://store/order-dashboard",
+    html="""
+    <!DOCTYPE html>
+    <html>
+      <body style="font-family: system-ui; padding: 20px; background: #fafafa;">
+        <h2 style="color: #0f172a;">Live Order Dashboard</h2>
+        <div id="data">Loading metrics...</div>
+      </body>
+    </html>
+    """,
+    tags=["dashboard"]
+)
+def view_order_dashboard() -> str:
+    """Open interactive order dashboard."""
+    return '<iframe src="ui://store/order-dashboard" width="100%" height="500"></iframe>'
+```
+
+---
+
+### Recipe 7: Local stdio CLI & Desktop AI Bridge
+
+```python
+# main.py
+from fastapi import FastAPI
+from fast_mcp import FastMCP
+
+app = FastAPI()
+mcp = FastMCP(app=app, name="desktop-mcp")
+
+@mcp.tool
+def ping() -> str:
+    return "pong"
+
+mcp.mount()
+```
+
+Run directly:
+```bash
+fast-mcp stdio main:app
+```
+
+---
+
+## 5. MCP Client Configuration Guide (Claude Desktop & Cursor)
+
+### Option 1: Zero-Install with `uvx` (Recommended)
+
+Requires no manual virtual environment activation or `pip install`. Add to your `claude_desktop_config.json` or Cursor MCP settings:
+
+```json
+{
+  "mcpServers": {
+    "my-fastapi-app": {
+      "command": "uvx",
+      "args": [
+        "--from",
+        "mcp-fastapi",
+        "fast-mcp",
+        "stdio",
+        "main:app"
+      ]
+    }
+  }
+}
+```
+
+### Option 2: Local CLI Installation
+
+If `mcp-fastapi` is installed in your project virtual environment:
+
+```json
+{
+  "mcpServers": {
+    "my-fastapi-app": {
+      "command": "fast-mcp",
+      "args": [
+        "stdio",
+        "main:app"
+      ]
+    }
+  }
+}
+```
+
+### Option 3: Remote / SSE Server Transport
+
+If your FastAPI application is running as a web service:
+
+```json
+{
+  "mcpServers": {
+    "my-fastapi-app": {
+      "url": "http://127.0.0.1:8000/mcp/sse",
+      "transport": "sse"
+    }
+  }
+}
+```
+
+---
+
+## 6. Supported Capabilities & Registry Manifests
+
+### Capabilities Summary
+
+- **Tools**:
+  - Full route reflection of FastAPI endpoints via `tags=["mcp"]`.
+  - Custom composite tools registered via `@mcp.tool`.
+  - Automatic JSON schema generation for path, query, and Pydantic body models.
+  - Google, Sphinx, and NumPy docstring parsing into tool parameter descriptions.
+  - Progressive tool discovery with `search_tools` meta-tool.
+- **Resources**:
+  - `ui://` custom URI scheme support.
+  - Interactive SEP-1865 HTML widgets via `@mcp.app`.
+  - Embedded developer web inspector at `/mcp/docs`.
+- **Prompts**:
+  - Extensible MCP prompt handlers.
+- **Transports**:
+  - `stdio`: Local standard I/O pipes for desktop AI clients.
+  - `sse`: HTTP/SSE dual-citizen ASGI mount (`/mcp/sse` and `/mcp/messages`).
+
+### Smithery Registry Manifest (`smithery.yaml`)
+
+```yaml
+startCommand:
+  type: stdio
+  config:
+    command: "uvx"
+    args:
+      - "--from"
+      - "mcp-fastapi"
+      - "fast-mcp"
+      - "stdio"
+      - "${target}"
+```
+
+### MCP Directory Manifest (`mcp.json`)
+
+```json
+{
+  "name": "mcp-fastapi",
+  "description": "FastAPI-native Model Context Protocol framework",
+  "version": "0.1.0",
+  "author": "Manas Pradhan",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Manas-maker/fast-mcp"
+  },
+  "capabilities": {
+    "tools": true,
+    "resources": true,
+    "prompts": true,
+    "transports": ["stdio", "sse"]
+  }
+}
+```
+
+---
+
+## 7. Integration Testing with Pytest and ASGI Transport
+
+`mcp-fastapi` tests exercise external behavior across the ASGI Protocol Seam using `httpx.AsyncClient` with `ASGITransport`. No external network sockets or subprocesses are required:
+
+```python
+import pytest
+from httpx import AsyncClient, ASGITransport
+from fastapi import FastAPI
+from fast_mcp import FastMCP
+
+@pytest.mark.asyncio
+async def test_mcp_sse_handshake_and_tool_call():
+    app = FastAPI()
+    mcp = FastMCP(app=app, name="test-mcp")
+
+    @mcp.tool
+    def echo(message: str) -> str:
+        return f"echo: {message}"
+
+    mcp.mount()
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        # Verify docs inspector loads
+        docs_res = await client.get("/mcp/docs")
+        assert docs_res.status_code == 200
+        assert "FastMCP" in docs_res.text
+
+        # Verify docs tools endpoint returns tool definitions
+        tools_res = await client.get("/mcp/docs/tools")
+        assert tools_res.status_code == 200
+        data = tools_res.json()
+        assert any(t["name"] == "echo" for t in data["tools"])
+
+        # Test in-browser test invocation endpoint
+        call_res = await client.post("/mcp/docs/call", json={"name": "echo", "arguments": {"message": "hello"}})
+        assert call_res.status_code == 200
+        assert call_res.json()["result"] == "echo: hello"
+```

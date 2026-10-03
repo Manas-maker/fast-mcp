@@ -1,0 +1,1670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>mcp-fastapi (fast-mcp) — FastAPI-native Model Context Protocol Framework</title>
+  <meta name="description" content="FastAPI-native Model Context Protocol (MCP) framework with automatic route reflection, ASGI scope bridging, progressive tool discovery, resilient error recovery, and interactive in-chat MCP Apps (SEP-1865).">
+  <meta name="keywords" content="FastAPI, Model Context Protocol, MCP, mcp-fastapi, fast-mcp, Claude Desktop, Cursor, Python, AI agents, LLM tools, ASGI">
+  <meta name="author" content="Manas Pradhan">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://manas-maker.github.io/fast-mcp/">
+
+  <!-- OpenGraph Metadata -->
+  <meta property="og:site_name" content="mcp-fastapi">
+  <meta property="og:title" content="mcp-fastapi (fast-mcp) — FastAPI-native MCP Framework">
+  <meta property="og:description" content="Turn existing FastAPI endpoints and Pydantic schemas into LLM-callable MCP tools in one line of code. Native ASGI auth bridging, progressive discovery, and in-chat widgets.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://manas-maker.github.io/fast-mcp/">
+  <meta property="og:image" content="https://manas-maker.github.io/fast-mcp/og-image.png">
+
+  <!-- Twitter Card Metadata -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="mcp-fastapi (fast-mcp) — FastAPI-native MCP Framework">
+  <meta name="twitter:description" content="FastAPI-native Model Context Protocol framework with automatic route reflection, ASGI scope bridging, progressive discovery, and in-chat MCP Apps.">
+  <meta name="twitter:image" content="https://manas-maker.github.io/fast-mcp/og-image.png">
+
+  <!-- Schema.org JSON-LD Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "SoftwareApplication",
+        "name": "mcp-fastapi",
+        "alternateName": "fast-mcp",
+        "applicationCategory": "DeveloperApplication",
+        "operatingSystem": "Cross-platform",
+        "description": "FastAPI-native Model Context Protocol framework with automatic route reflection, ASGI scope bridging, dynamic progressive tool discovery, resilient error recovery, and interactive in-chat MCP Apps.",
+        "url": "https://manas-maker.github.io/fast-mcp/",
+        "author": {
+          "@type": "Person",
+          "name": "Manas Pradhan",
+          "url": "https://github.com/Manas-maker"
+        },
+        "license": "https://opensource.org/licenses/MIT",
+        "softwareVersion": "0.1.0"
+      },
+      {
+        "@type": "SoftwareSourceCode",
+        "name": "mcp-fastapi",
+        "programmingLanguage": "Python",
+        "codeRepository": "https://github.com/Manas-maker/fast-mcp",
+        "runtimePlatform": "Python 3.11+",
+        "license": "https://opensource.org/licenses/MIT"
+      }
+    ]
+  }
+  </script>
+
+  <style>
+    :root {
+      --bg: #fcfbf9;
+      --surface: #ffffff;
+      --surface-subtle: #f7f6f2;
+      --surface-card: #ffffff;
+      --text: #141414;
+      --text-muted: #595959;
+      --text-faint: #767676;
+      --border: #dfded9;
+      --border-dark: #b8b6af;
+      --accent: #b91c1c;
+      --accent-hover: #991b1b;
+      --accent-bg: #fef2f2;
+      --tag-bg: #eceae4;
+      --code-bg: #1e1e24;
+      --code-text: #f3f4f6;
+      --code-border: #33333d;
+      --font-serif: Charter, "Bitstream Charter", "Sitka Text", Cambria, Georgia, serif;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      --font-mono: ui-monospace, "SF Mono", Monaco, "Cascadia Code", "Liberation Mono", Menlo, Consolas, monospace;
+      --radius: 2px;
+    }
+
+    [data-theme="dark"] {
+      --bg: #0f1115;
+      --surface: #171920;
+      --surface-subtle: #12141a;
+      --surface-card: #171920;
+      --text: #f0f1f5;
+      --text-muted: #a0a4b0;
+      --text-faint: #6c7280;
+      --border: #282c37;
+      --border-dark: #3f4556;
+      --accent: #ef4444;
+      --accent-hover: #f87171;
+      --accent-bg: #2b1818;
+      --tag-bg: #222530;
+      --code-bg: #0b0c0f;
+      --code-text: #eceff4;
+      --code-border: #232733;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      font-size: 16px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Links & Hover Underline (Editorial requirement) */
+    a {
+      color: inherit;
+      text-decoration: none;
+      transition: text-decoration-color 0.15s ease;
+    }
+
+    a:hover {
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      text-decoration-thickness: 1.5px;
+    }
+
+    .container {
+      max-width: 1140px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* Top Strip / Ribbon */
+    .top-strip {
+      border-bottom: 1px solid var(--border);
+      background-color: var(--surface-subtle);
+      font-size: 12px;
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 6px 0;
+      color: var(--text-muted);
+    }
+
+    .top-strip-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .top-strip a {
+      color: var(--text-muted);
+    }
+
+    .top-strip a:hover {
+      color: var(--text);
+    }
+
+    .theme-toggle-btn {
+      background: none;
+      border: 1px solid var(--border);
+      padding: 2px 8px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text);
+      cursor: pointer;
+      border-radius: var(--radius);
+    }
+
+    .theme-toggle-btn:hover {
+      background-color: var(--surface);
+      border-color: var(--border-dark);
+      text-decoration: underline;
+    }
+
+    /* Editorial Masthead */
+    header.masthead {
+      padding: 48px 0 24px 0;
+      border-bottom: 3px double var(--border-dark);
+    }
+
+    .masthead-title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 12px;
+    }
+
+    h1.brand-title {
+      font-family: var(--font-serif);
+      font-size: 52px;
+      line-height: 1.05;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-title span.package-tag {
+      font-family: var(--font-mono);
+      font-size: 18px;
+      font-weight: normal;
+      color: var(--text-muted);
+      vertical-align: middle;
+      margin-left: 12px;
+    }
+
+    .tagline {
+      font-family: var(--font-serif);
+      font-size: 24px;
+      font-weight: 400;
+      color: var(--text);
+      margin-bottom: 16px;
+      line-height: 1.35;
+    }
+
+    .masthead-lead {
+      font-size: 17px;
+      color: var(--text-muted);
+      max-width: 860px;
+      margin-bottom: 24px;
+    }
+
+    /* Meta Badges Row */
+    .badge-bar {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      margin-top: 16px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 10px;
+      background-color: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+    }
+
+    .badge.accent {
+      background-color: var(--accent-bg);
+      border-color: var(--accent);
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .badge-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background-color: #10b981;
+      display: inline-block;
+    }
+
+    /* Main Navigation Bar */
+    nav.main-nav {
+      border-bottom: 1px solid var(--border);
+      background-color: var(--surface);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .nav-inner {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      overflow-x: auto;
+      white-space: nowrap;
+      padding: 10px 0;
+      font-family: var(--font-mono);
+      font-size: 13px;
+    }
+
+    .nav-inner a {
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .nav-inner a:hover,
+    .nav-inner a.active {
+      color: var(--text);
+      text-decoration: underline;
+      text-underline-offset: 5px;
+      text-decoration-thickness: 2px;
+    }
+
+    /* Editorial Sections */
+    section.editorial-section {
+      padding: 48px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section-kicker {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--accent);
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    h2.section-heading {
+      font-family: var(--font-serif);
+      font-size: 34px;
+      line-height: 1.2;
+      font-weight: 700;
+      margin-bottom: 16px;
+      letter-spacing: -0.01em;
+    }
+
+    .section-desc {
+      font-size: 17px;
+      color: var(--text-muted);
+      max-width: 820px;
+      margin-bottom: 32px;
+    }
+
+    /* Terminal & Install Box */
+    .install-box {
+      background-color: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 36px;
+    }
+
+    .install-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      background-color: var(--surface-subtle);
+    }
+
+    .install-tab-btn {
+      padding: 10px 18px;
+      background: none;
+      border: none;
+      border-right: 1px solid var(--border);
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+
+    .install-tab-btn:hover {
+      text-decoration: underline;
+      color: var(--text);
+    }
+
+    .install-tab-btn.active {
+      background-color: var(--surface);
+      color: var(--text);
+      font-weight: 600;
+      border-bottom: 2px solid var(--accent);
+      margin-bottom: -1px;
+    }
+
+    .install-tab-content {
+      padding: 16px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: var(--font-mono);
+      font-size: 14px;
+      background-color: var(--surface);
+    }
+
+    .install-command {
+      color: var(--text);
+      word-break: break-all;
+    }
+
+    .copy-btn {
+      background: var(--surface-subtle);
+      border: 1px solid var(--border);
+      padding: 6px 14px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      cursor: pointer;
+      color: var(--text);
+      border-radius: var(--radius);
+      white-space: nowrap;
+      margin-left: 16px;
+    }
+
+    .copy-btn:hover {
+      background-color: var(--border);
+      text-decoration: underline;
+    }
+
+    /* Grid Layouts */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    @media (max-width: 860px) {
+      .grid-2, .grid-3 {
+        grid-template-columns: 1fr;
+      }
+      h1.brand-title {
+        font-size: 38px;
+      }
+      h2.section-heading {
+        font-size: 28px;
+      }
+    }
+
+    /* Editorial Cards */
+    .card {
+      background-color: var(--surface-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .card h3 {
+      font-family: var(--font-serif);
+      font-size: 20px;
+      margin-bottom: 10px;
+      font-weight: 700;
+    }
+
+    .card p {
+      font-size: 15px;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+
+    /* Interactive Capabilities Showcase */
+    .showcase-container {
+      background-color: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .showcase-nav {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      background-color: var(--surface-subtle);
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+
+    .showcase-btn {
+      padding: 12px 18px;
+      background: none;
+      border: none;
+      border-right: 1px solid var(--border);
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .showcase-btn:hover {
+      text-decoration: underline;
+      color: var(--text);
+    }
+
+    .showcase-btn.active {
+      background-color: var(--surface);
+      color: var(--text);
+      font-weight: 600;
+      border-bottom: 2px solid var(--accent);
+      margin-bottom: -1px;
+    }
+
+    .showcase-pane {
+      display: none;
+      padding: 28px;
+    }
+
+    .showcase-pane.active {
+      display: block;
+    }
+
+    .showcase-header {
+      margin-bottom: 20px;
+    }
+
+    .showcase-header h3 {
+      font-family: var(--font-serif);
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+
+    .showcase-header p {
+      color: var(--text-muted);
+      font-size: 15px;
+      max-width: 800px;
+    }
+
+    /* Code Block Display */
+    .code-wrapper {
+      position: relative;
+      background-color: var(--code-bg);
+      border: 1px solid var(--code-border);
+      border-radius: var(--radius);
+      margin: 16px 0;
+      overflow: hidden;
+    }
+
+    .code-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 16px;
+      border-bottom: 1px solid var(--code-border);
+      background-color: rgba(255, 255, 255, 0.03);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: #94a3b8;
+    }
+
+    .code-wrapper pre {
+      padding: 18px 20px;
+      overflow-x: auto;
+      font-family: var(--font-mono);
+      font-size: 13.5px;
+      line-height: 1.5;
+      color: var(--code-text);
+    }
+
+    .code-wrapper .btn-copy-code {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #f1f5f9;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      padding: 3px 10px;
+      cursor: pointer;
+      border-radius: var(--radius);
+    }
+
+    .code-wrapper .btn-copy-code:hover {
+      background: rgba(255, 255, 255, 0.2);
+      text-decoration: underline;
+    }
+
+    /* Architecture Table & Comparison */
+    table.editorial-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14.5px;
+      margin: 20px 0;
+      background-color: var(--surface);
+      border: 1px solid var(--border);
+    }
+
+    table.editorial-table th {
+      background-color: var(--surface-subtle);
+      border-bottom: 1px solid var(--border-dark);
+      padding: 12px 16px;
+      text-align: left;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+
+    table.editorial-table td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    table.editorial-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    table.editorial-table tr:hover td {
+      background-color: var(--surface-subtle);
+    }
+
+    .code-inline {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      background-color: var(--tag-bg);
+      padding: 2px 6px;
+      border-radius: var(--radius);
+      color: var(--text);
+    }
+
+    /* Seam Diagram Box */
+    .diagram-box {
+      background-color: var(--surface-subtle);
+      border: 1px solid var(--border);
+      padding: 24px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.45;
+      overflow-x: auto;
+      margin: 24px 0;
+    }
+
+    /* API Search Bar */
+    .api-filter-row {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .api-search-input {
+      flex: 1;
+      padding: 10px 16px;
+      font-family: var(--font-mono);
+      font-size: 14px;
+      background-color: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: var(--radius);
+    }
+
+    .api-search-input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    /* Client Config Box */
+    .config-box {
+      border: 1px solid var(--border);
+      background-color: var(--surface);
+      border-radius: var(--radius);
+      margin-top: 16px;
+    }
+
+    .config-nav {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      background-color: var(--surface-subtle);
+      overflow-x: auto;
+    }
+
+    .config-tab-btn {
+      padding: 10px 16px;
+      background: none;
+      border: none;
+      border-right: 1px solid var(--border);
+      font-family: var(--font-mono);
+      font-size: 12.5px;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+
+    .config-tab-btn:hover {
+      text-decoration: underline;
+      color: var(--text);
+    }
+
+    .config-tab-btn.active {
+      background-color: var(--surface);
+      color: var(--text);
+      font-weight: 600;
+      border-bottom: 2px solid var(--accent);
+      margin-bottom: -1px;
+    }
+
+    .config-pane {
+      display: none;
+      padding: 20px;
+    }
+
+    .config-pane.active {
+      display: block;
+    }
+
+    /* Footer */
+    footer.editorial-footer {
+      border-top: 3px double var(--border-dark);
+      background-color: var(--surface-subtle);
+      padding: 56px 0 40px 0;
+      margin-top: 60px;
+      font-size: 14px;
+    }
+
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 36px;
+      margin-bottom: 40px;
+    }
+
+    @media (max-width: 860px) {
+      .footer-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .footer-col h4 {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text);
+      margin-bottom: 14px;
+    }
+
+    .footer-col ul {
+      list-style: none;
+    }
+
+    .footer-col ul li {
+      margin-bottom: 8px;
+    }
+
+    .footer-col ul li a {
+      color: var(--text-muted);
+    }
+
+    .footer-col ul li a:hover {
+      color: var(--text);
+    }
+
+    .footer-bottom {
+      border-top: 1px solid var(--border);
+      padding-top: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      color: var(--text-faint);
+      font-family: var(--font-mono);
+      font-size: 12px;
+    }
+
+    /* Toast Notification */
+    #copy-toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background-color: var(--code-bg);
+      color: #f1f5f9;
+      border: 1px solid var(--code-border);
+      padding: 10px 18px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      border-radius: var(--radius);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 0.2s, transform 0.2s;
+      pointer-events: none;
+      z-index: 1000;
+    }
+
+    #copy-toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Strip / Edition Ribbon -->
+  <div class="top-strip">
+    <div class="container top-strip-inner">
+      <div>
+        <span>mcp-fastapi</span> • <span>FastAPI Model Context Protocol</span> • <span>Edition 2026</span>
+      </div>
+      <div style="display: flex; gap: 16px; align-items: center;">
+        <a href="https://pypi.org/project/mcp-fastapi/" target="_blank" rel="noopener">PyPI v0.1.0</a>
+        <a href="https://github.com/Manas-maker/fast-mcp" target="_blank" rel="noopener">GitHub</a>
+        <a href="llms.txt">llms.txt</a>
+        <a href="llms-full.txt">llms-full.txt</a>
+        <button id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle Dark/Light Mode">Theme: Auto</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Editorial Masthead Header -->
+  <header class="masthead">
+    <div class="container">
+      <div class="masthead-title-row">
+        <div>
+          <h1 class="brand-title">mcp-fastapi<span class="package-tag">(fast-mcp)</span></h1>
+        </div>
+        <div>
+          <a href="https://github.com/Manas-maker/fast-mcp" target="_blank" rel="noopener" class="badge">
+            ★ Star on GitHub
+          </a>
+        </div>
+      </div>
+      <p class="tagline">The FastAPI-native Model Context Protocol framework.</p>
+      <p class="masthead-lead">
+        Mount Model Context Protocol (MCP) servers directly onto existing FastAPI applications in one line of code. Automatic route reflection, ASGI scope bridging for header & bearer auth, dynamic progressive tool discovery, resilient error recovery, and interactive in-chat MCP Apps (SEP-1865).
+      </p>
+
+      <div class="badge-bar">
+        <div class="badge"><span class="badge-dot"></span>108 Tests Passed</div>
+        <div class="badge">Python 3.11+</div>
+        <div class="badge">FastAPI 0.110+</div>
+        <div class="badge">MCP Specification 1.0+</div>
+        <div class="badge">License: MIT</div>
+        <div class="badge accent">pip install mcp-fastapi</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Sticky Horizontal Navigation -->
+  <nav class="main-nav">
+    <div class="container nav-inner">
+      <a href="#quickstart">Quickstart</a>
+      <a href="#features">7 Core Capabilities</a>
+      <a href="#client-config">Desktop Clients (Claude/Cursor)</a>
+      <a href="#capabilities">Registry Capabilities</a>
+      <a href="#architecture">Architecture & Seam</a>
+      <a href="#api-reference">API Reference</a>
+      <a href="llms.txt">AI Index (llms.txt)</a>
+      <a href="https://github.com/Manas-maker/fast-mcp" target="_blank" rel="noopener">Source Code ↗</a>
+    </div>
+  </nav>
+
+  <main class="container">
+
+    <!-- Quickstart & Installation Section -->
+    <section id="quickstart" class="editorial-section">
+      <div class="section-kicker">01 / Getting Started</div>
+      <h2 class="section-heading">Installation & Quickstart</h2>
+      <p class="section-desc">
+        Install the package using your preferred Python package manager, or run it instantaneously using <span class="code-inline">uvx</span> without prior installation.
+      </p>
+
+      <!-- Install Box with tabs -->
+      <div class="install-box">
+        <div class="install-tabs">
+          <button class="install-tab-btn active" onclick="switchInstallTab(event, 'tab-pip')">pip</button>
+          <button class="install-tab-btn" onclick="switchInstallTab(event, 'tab-uv')">uv</button>
+          <button class="install-tab-btn" onclick="switchInstallTab(event, 'tab-uvx')">uvx (zero-install)</button>
+        </div>
+        <div id="tab-pip" class="install-tab-content">
+          <span class="install-command">pip install mcp-fastapi</span>
+          <button class="copy-btn" onclick="copyText('pip install mcp-fastapi')">Copy Command</button>
+        </div>
+        <div id="tab-uv" class="install-tab-content" style="display: none;">
+          <span class="install-command">uv add mcp-fastapi</span>
+          <button class="copy-btn" onclick="copyText('uv add mcp-fastapi')">Copy Command</button>
+        </div>
+        <div id="tab-uvx" class="install-tab-content" style="display: none;">
+          <span class="install-command">uvx --from mcp-fastapi fast-mcp stdio main:app</span>
+          <button class="copy-btn" onclick="copyText('uvx --from mcp-fastapi fast-mcp stdio main:app')">Copy Command</button>
+        </div>
+      </div>
+
+      <!-- Quickstart Code Block -->
+      <div class="code-wrapper">
+        <div class="code-header">
+          <span>main.py — Minimal Complete Working Example</span>
+          <button class="btn-copy-code" onclick="copySnippet('snippet-quickstart')">Copy Code</button>
+        </div>
+        <pre id="snippet-quickstart"><code>from fastapi import FastAPI, Depends, Header, HTTPException
+from pydantic import BaseModel
+from fast_mcp import FastMCP
+
+app = FastAPI(title="Store API", version="1.0.0")
+mcp = FastMCP(app=app, name="store-mcp")
+
+# 1. Existing FastAPI route automatically reflected as an MCP tool
+class Product(BaseModel):
+    id: int
+    name: str
+    price: float
+
+@app.get("/products/{product_id}", tags=["mcp"])
+async def get_product(product_id: int) -> Product:
+    """Fetch product details by ID."""
+    if product_id == 404:
+        raise HTTPException(status_code=404, detail="Product not found")
+    return Product(id=product_id, name="Smart Widget", price=29.99)
+
+# 2. Custom composite AI tool with native FastAPI dependency injection
+def verify_token(authorization: str = Header(...)) -> str:
+    if not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Invalid token")
+    return authorization.split(" ")[1]
+
+@mcp.tool(name="order_status", description="Check customer order status")
+def check_order(order_id: str, user: str = Depends(verify_token)) -> dict:
+    return {"order_id": order_id, "customer": user, "status": "Shipped"}
+
+# 3. Mount MCP endpoints (/mcp/sse, /mcp/messages, /mcp/docs)
+mcp.mount()</code></pre>
+      </div>
+
+      <p style="font-size: 15px; color: var(--text-muted);">
+        Run with standard ASGI servers (<span class="code-inline">uvicorn main:app --reload</span>) or launch over stdio for desktop AI clients with <span class="code-inline">fast-mcp stdio main:app</span>.
+      </p>
+    </section>
+
+    <!-- 7 Core Capabilities Showcase -->
+    <section id="features" class="editorial-section">
+      <div class="section-kicker">02 / Interactive Tour</div>
+      <h2 class="section-heading">The Seven Core Architectural Capabilities</h2>
+      <p class="section-desc">
+        Click through each capability card below to explore working code examples, protocol behavior, and technical rationale.
+      </p>
+
+      <div class="showcase-container">
+        <div class="showcase-nav">
+          <button class="showcase-btn active" onclick="switchShowcase(event, 'pane-reflection')">1. Route Reflection</button>
+          <button class="showcase-btn" onclick="switchShowcase(event, 'pane-tools')">2. Custom AI Tools</button>
+          <button class="showcase-btn" onclick="switchShowcase(event, 'pane-auth')">3. Scope-Bridged Auth</button>
+          <button class="showcase-btn" onclick="switchShowcase(event, 'pane-discovery')">4. Dynamic Discovery</button>
+          <button class="showcase-btn" onclick="switchShowcase(event, 'pane-errors')">5. Errors & Serializers</button>
+          <button class="showcase-btn" onclick="switchShowcase(event, 'pane-apps')">6. MCP Apps & Dual UI</button>
+          <button class="showcase-btn" onclick="switchShowcase(event, 'pane-stdio')">7. Local stdio CLI</button>
+        </div>
+
+        <!-- Pane 1: Route Reflection -->
+        <div id="pane-reflection" class="showcase-pane active">
+          <div class="showcase-header">
+            <h3>1. Automatic Route Reflection (<span class="code-inline">tags=["mcp"]</span>)</h3>
+            <p>
+              Expose existing endpoints without rewriting handlers into standalone functions. Tagging a FastAPI route with <span class="code-inline">tags=["mcp"]</span> automatically inspects Pydantic schemas, path/query variables, and docstrings (Google, Sphinx, NumPy format) into full MCP JSON tool definitions.
+            </p>
+          </div>
+          <div class="code-wrapper">
+            <div class="code-header">
+              <span>Python Route Definition</span>
+              <button class="btn-copy-code" onclick="copySnippet('code-reflection')">Copy Code</button>
+            </div>
+            <pre id="code-reflection"><code>class InventoryQuery(BaseModel):
+    category: str
+    max_price: float = 100.0
+
+@app.post("/inventory/search", tags=["mcp"])
+async def search_inventory(query: InventoryQuery, limit: int = 10) -> list[dict]:
+    """Search catalog items by category and maximum price.
+
+    Args:
+        query: Filter specification with category and price limit.
+        limit: Maximum number of records to return.
+    """
+    return [{"item": "Keyboard", "price": 49.99}]</code></pre>
+          </div>
+        </div>
+
+        <!-- Pane 2: Custom AI Tools -->
+        <div id="pane-tools" class="showcase-pane">
+          <div class="showcase-header">
+            <h3>2. Custom AI Tools (<span class="code-inline">@mcp.tool</span>)</h3>
+            <p>
+              Define AI-specialized composite tools alongside standard REST endpoints. Supports bare and parameterized decorators, custom names, docstring extraction, and metadata tagging.
+            </p>
+          </div>
+          <div class="code-wrapper">
+            <div class="code-header">
+              <span>Custom Tool Registration</span>
+              <button class="btn-copy-code" onclick="copySnippet('code-tools')">Copy Code</button>
+            </div>
+            <pre id="code-tools"><code># Bare decorator
+@mcp.tool
+def calculate_quote(quantity: int, discount: float = 0.0) -> float:
+    """Calculate quotation with volume discount."""
+    return quantity * 100.0 * (1.0 - discount)
+
+# Parameterized decorator with custom name & tags
+@mcp.tool(name="stock_check", description="Lookup stock quantity", tags=["inventory"])
+async def check_inventory(sku: str) -> dict:
+    return {"sku": sku, "in_stock": True, "count": 42}</code></pre>
+          </div>
+        </div>
+
+        <!-- Pane 3: Scope-Bridged Auth -->
+        <div id="pane-auth" class="showcase-pane">
+          <div class="showcase-header">
+            <h3>3. ASGI Scope Bridging & Native Auth</h3>
+            <p>
+              Client authorization headers (<span class="code-inline">Authorization: Bearer &lt;token&gt;</span>, cookies, API keys) passed during SSE connection or message post are preserved and bridged into an in-memory ASGI <span class="code-inline">Request</span>. FastAPI's <span class="code-inline">Depends()</span> and <span class="code-inline">Security()</span> resolve seamlessly.
+            </p>
+          </div>
+          <div class="code-wrapper">
+            <div class="code-header">
+              <span>Scope Bridging Example</span>
+              <button class="btn-copy-code" onclick="copySnippet('code-auth')">Copy Code</button>
+            </div>
+            <pre id="code-auth"><code>from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fast_mcp import FastMCP, get_current_request
+
+security = HTTPBearer()
+
+def get_current_user(creds: HTTPAuthorizationCredentials = Depends(security)) -> str:
+    token = creds.credentials
+    if token != "secret-ai-token":
+        raise HTTPException(status_code=401, detail="Invalid token")
+    return "authorized_agent"
+
+@mcp.tool
+async def sensitive_action(user: str = Depends(get_current_user)) -> dict:
+    # Access low-level request if needed
+    request = get_current_request()
+    return {"status": "ok", "caller": user, "ip": request.client.host}</code></pre>
+          </div>
+        </div>
+
+        <!-- Pane 4: Dynamic Discovery -->
+        <div id="pane-discovery" class="showcase-pane">
+          <div class="showcase-header">
+            <h3>4. Dynamic Progressive Tool Discovery</h3>
+            <p>
+              Avoid overwhelming LLM context windows when hosting hundreds of API routes. When enabled, <span class="code-inline">tools/list</span> only advertises baseline tools and the <span class="code-inline">search_tools(query: str)</span> meta-tool. FastMCP ranks candidates using the zero-dependency <span class="code-inline">KeywordTagRouter</span>.
+            </p>
+          </div>
+          <div class="code-wrapper">
+            <div class="code-header">
+              <span>Dynamic Discovery Configuration</span>
+              <button class="btn-copy-code" onclick="copySnippet('code-discovery')">Copy Code</button>
+            </div>
+            <pre id="code-discovery"><code>mcp = FastMCP(
+    app=app,
+    dynamic_discovery=True,  # Or set dynamic_discovery_threshold=20
+    baseline_tools=["search_tools", "get_health_status"],
+    baseline_tag="core",
+)
+
+# When LLM asks to create an invoice, it first calls:
+# search_tools(query="invoice")
+# -> Returns matching tools: [create_invoice, get_invoice, cancel_invoice]</code></pre>
+          </div>
+        </div>
+
+        <!-- Pane 5: Errors & Serializers -->
+        <div id="pane-errors" class="showcase-pane">
+          <div class="showcase-header">
+            <h3>5. Resilient Error Interception & Custom Serializers</h3>
+            <p>
+              Traps route <span class="code-inline">HTTPException</span> (400, 404, 422) and Pydantic validation errors into clean <span class="code-inline">CallToolResult(is_error=True)</span> payloads. The LLM receives actionable error text to self-correct instead of crashing the transport. Serializers format responses into token-saving minified JSON or customized markdown.
+            </p>
+          </div>
+          <div class="code-wrapper">
+            <div class="code-header">
+              <span>Custom Serializer Example</span>
+              <button class="btn-copy-code" onclick="copySnippet('code-errors')">Copy Code</button>
+            </div>
+            <pre id="code-errors"><code>class Report(BaseModel):
+    title: str
+    metrics: dict[str, int]
+
+@mcp.serializer(Report)
+def format_report(report: Report) -> str:
+    """Format report into concise markdown table for LLM consumption."""
+    md = f"### {report.title}\n"
+    for k, v in report.metrics.items():
+        md += f"- **{k}**: {v}\n"
+    return md</code></pre>
+          </div>
+        </div>
+
+        <!-- Pane 6: Dual UI & MCP Apps -->
+        <div id="pane-apps" class="showcase-pane">
+          <div class="showcase-header">
+            <h3>6. Embedded /mcp/docs & In-Chat MCP Apps (SEP-1865)</h3>
+            <p>
+              Features an embedded browser inspector at <span class="code-inline">/mcp/docs</span> for human developers, plus native support for in-chat interactive iframes in desktop AI clients (Claude Desktop, Cursor, VS Code) via <span class="code-inline">_meta.ui.resourceUri</span>, the built-in <span class="code-inline">inspect()</span> tool, and <span class="code-inline">@mcp.app()</span>.
+            </p>
+          </div>
+          <div class="code-wrapper">
+            <div class="code-header">
+              <span>MCP App Registration</span>
+              <button class="btn-copy-code" onclick="copySnippet('code-apps')">Copy Code</button>
+            </div>
+            <pre id="code-apps"><code>@mcp.app(
+    name="order_dashboard",
+    resource_uri="ui://store/dashboard",
+    html="""
+    <div style="font-family: sans-serif; padding: 1.5rem; background: #f8fafc; border: 1px solid #e2e8f0;">
+      <h2>Live Store Dashboard</h2>
+      <p>Active Users: <strong>1,420</strong></p>
+    </div>
+    """
+)
+def live_dashboard() -> str:
+    """Launch interactive store dashboard widget."""
+    return '<iframe src="ui://store/dashboard" width="100%" height="400"></iframe>'</code></pre>
+          </div>
+        </div>
+
+        <!-- Pane 7: Local stdio CLI -->
+        <div id="pane-stdio" class="showcase-pane">
+          <div class="showcase-header">
+            <h3>7. Local stdio CLI Runner & Desktop AI Bridge</h3>
+            <p>
+              Connect desktop AI clients (Claude Desktop, Cursor) directly to your FastAPI backend over standard input/output pipes with zero network setup, port conflicts, or external proxies.
+            </p>
+          </div>
+          <div class="code-wrapper">
+            <div class="code-header">
+              <span>CLI Usage & Programmatic stdio</span>
+              <button class="btn-copy-code" onclick="copySnippet('code-stdio')">Copy Code</button>
+            </div>
+            <pre id="code-stdio"><code># Shell Command:
+fast-mcp stdio main:app
+
+# Or Programmatically in Python:
+import asyncio
+from fast_mcp import FastMCP, run_stdio
+
+mcp = FastMCP(name="my-stdio-server")
+
+@mcp.tool()
+def add(a: int, b: int) -> int:
+    return a + b
+
+if __name__ == "__main__":
+    asyncio.run(run_stdio(mcp))</code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MCP Client Configuration Section -->
+    <section id="client-config" class="editorial-section">
+      <div class="section-kicker">03 / Integration</div>
+      <h2 class="section-heading">MCP Client Configuration (Claude Desktop & Cursor)</h2>
+      <p class="section-desc">
+        Configure desktop AI assistants to connect directly to your FastMCP instance. Use <span class="code-inline">uvx</span> for zero-install instant execution, or connect via local CLI or SSE transport.
+      </p>
+
+      <div class="config-box">
+        <div class="config-nav">
+          <button class="config-tab-btn active" onclick="switchConfigTab(event, 'cfg-claude-uvx')">Claude Desktop (uvx zero-install)</button>
+          <button class="config-tab-btn" onclick="switchConfigTab(event, 'cfg-claude-local')">Claude Desktop (local CLI)</button>
+          <button class="config-tab-btn" onclick="switchConfigTab(event, 'cfg-cursor')">Cursor Settings</button>
+          <button class="config-tab-btn" onclick="switchConfigTab(event, 'cfg-sse')">SSE Transport (Remote)</button>
+        </div>
+
+        <!-- Claude uvx -->
+        <div id="cfg-claude-uvx" class="config-pane active">
+          <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 12px;">
+            Add to <span class="code-inline">claude_desktop_config.json</span>. Uses <span class="code-inline">uvx</span> to automatically pull and execute <span class="code-inline">mcp-fastapi</span> in an isolated environment without manual installation:
+          </p>
+          <div class="code-wrapper">
+            <div class="code-header">
+              <span>claude_desktop_config.json</span>
+              <button class="btn-copy-code" onclick="copySnippet('code-cfg-claude-uvx')">Copy JSON</button>
+            </div>
+            <pre id="code-cfg-claude-uvx"><code>{
+  "mcpServers": {
+    "my-fastapi-backend": {
+      "command": "uvx",
+      "args": [
+        "--from",
+        "mcp-fastapi",
+        "fast-mcp",
+        "stdio",
+        "main:app"
+      ]
+    }
+  }
+}</code></pre>
+          </div>
+        </div>
+
+        <!-- Claude local -->
+        <div id="cfg-claude-local" class="config-pane">
+          <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 12px;">
+            For environments where <span class="code-inline">mcp-fastapi</span> is already installed in your virtual environment:
+          </p>
+          <div class="code-wrapper">
+            <div class="code-header">
+              <span>claude_desktop_config.json</span>
+              <button class="btn-copy-code" onclick="copySnippet('code-cfg-claude-local')">Copy JSON</button>
+            </div>
+            <pre id="code-cfg-claude-local"><code>{
+  "mcpServers": {
+    "my-fastapi-backend": {
+      "command": "fast-mcp",
+      "args": [
+        "stdio",
+        "main:app"
+      ]
+    }
+  }
+}</code></pre>
+          </div>
+        </div>
+
+        <!-- Cursor -->
+        <div id="cfg-cursor" class="config-pane">
+          <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 12px;">
+            In Cursor Settings &gt; Features &gt; MCP Servers, configure an stdio server:
+          </p>
+          <div class="code-wrapper">
+            <div class="code-header">
+              <span>Cursor MCP Configuration</span>
+              <button class="btn-copy-code" onclick="copySnippet('code-cfg-cursor')">Copy JSON</button>
+            </div>
+            <pre id="code-cfg-cursor"><code>{
+  "mcpServers": {
+    "fastapi-cursor-tools": {
+      "command": "uvx",
+      "args": ["--from", "mcp-fastapi", "fast-mcp", "stdio", "main:app"]
+    }
+  }
+}</code></pre>
+          </div>
+        </div>
+
+        <!-- SSE -->
+        <div id="cfg-sse" class="config-pane">
+          <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 12px;">
+            If your FastAPI app is already running via Uvicorn/Hypercorn, connect over Server-Sent Events (SSE):
+          </p>
+          <div class="code-wrapper">
+            <div class="code-header">
+              <span>SSE Client Configuration</span>
+              <button class="btn-copy-code" onclick="copySnippet('code-cfg-sse')">Copy JSON</button>
+            </div>
+            <pre id="code-cfg-sse"><code>{
+  "mcpServers": {
+    "fastapi-remote-sse": {
+      "url": "http://127.0.0.1:8000/mcp/sse",
+      "transport": "sse"
+    }
+  }
+}</code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Supported Capabilities & Registry Compliance -->
+    <section id="capabilities" class="editorial-section">
+      <div class="section-kicker">04 / Ecosystem</div>
+      <h2 class="section-heading">Supported Capabilities & Registry Compliance</h2>
+      <p class="section-desc">
+        <span class="code-inline">mcp-fastapi</span> implements the complete Model Context Protocol specification and complies with major MCP directory crawlers (Smithery, Glama, Pulse MCP, MCP.so, awesome-mcp-servers).
+      </p>
+
+      <table class="editorial-table">
+        <thead>
+          <tr>
+            <th>Capability</th>
+            <th>Support Level</th>
+            <th>Implementation Details</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Tools</strong></td>
+            <td>Full Support (Native)</td>
+            <td>Reflected FastAPI endpoints (<span class="code-inline">tags=["mcp"]</span>) and custom <span class="code-inline">@mcp.tool</span> decorators. Automatic Pydantic schema generation, docstring parsing, and dynamic discovery (<span class="code-inline">search_tools</span>).</td>
+          </tr>
+          <tr>
+            <td><strong>Resources</strong></td>
+            <td>Full Support (SEP-1865)</td>
+            <td>Custom <span class="code-inline">ui://</span> scheme support, SEP-1865 interactive HTML iframe bundles, and developer web inspector at <span class="code-inline">/mcp/docs</span>.</td>
+          </tr>
+          <tr>
+            <td><strong>Prompts</strong></td>
+            <td>Extensible</td>
+            <td>Supports prompt registration and templating conforming to MCP prompt specs.</td>
+          </tr>
+          <tr>
+            <td><strong>Transports</strong></td>
+            <td>Dual (stdio + sse)</td>
+            <td>Standard I/O pipes for desktop AI clients (<span class="code-inline">stdio</span>) and HTTP/SSE ASGI mount (<span class="code-inline">/mcp/sse</span> &amp; <span class="code-inline">/mcp/messages</span>).</td>
+          </tr>
+          <tr>
+            <td><strong>Auth Bridging</strong></td>
+            <td>Native ASGI</td>
+            <td>Bridges SSE/POST headers into in-memory ASGI <span class="code-inline">Request</span>, transparently solving FastAPI <span class="code-inline">Depends()</span> and <span class="code-inline">Security()</span>.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="badge-bar" style="margin-top: 16px;">
+        <a href="https://github.com/Manas-maker/fast-mcp/blob/master/smithery.yaml" class="badge" target="_blank" rel="noopener">📄 View smithery.yaml</a>
+        <a href="https://github.com/Manas-maker/fast-mcp/blob/master/mcp.json" class="badge" target="_blank" rel="noopener">📄 View mcp.json</a>
+      </div>
+    </section>
+
+    <!-- Architecture & The ASGI Seam -->
+    <section id="architecture" class="editorial-section">
+      <div class="section-kicker">05 / Deep Dive</div>
+      <h2 class="section-heading">Architecture & The Dual-Citizen ASGI Seam</h2>
+      <p class="section-desc">
+        How <span class="code-inline">mcp-fastapi</span> eliminates subprocess overhead, proxy latency, and authorization disconnects.
+      </p>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3>Traditional Subprocess Approach</h3>
+          <p>
+            Standard MCP implementations spawn external child processes or require external reverse proxies.
+          </p>
+          <ul style="font-size: 14px; color: var(--text-muted); padding-left: 20px; line-height: 1.8;">
+            <li>Requires separate worker processes and port allocation.</li>
+            <li>HTTP headers (Bearer tokens, cookies) do not reach internal dependencies.</li>
+            <li>Code duplication between REST API endpoints and MCP tool handlers.</li>
+            <li>Uncaught exceptions crash the transport pipe.</li>
+          </ul>
+        </div>
+        <div class="card" style="border-color: var(--accent);">
+          <h3>mcp-fastapi In-Process ASGI Mount</h3>
+          <p>
+            Mounts in-memory directly onto your existing FastAPI application.
+          </p>
+          <ul style="font-size: 14px; color: var(--text); padding-left: 20px; line-height: 1.8;">
+            <li>Zero subprocess overhead; runs inside standard ASGI server.</li>
+            <li><strong>ASGI Scope Bridging</strong> captures handshake headers into in-memory <span class="code-inline">Request</span> context.</li>
+            <li>Existing <span class="code-inline">Depends()</span> and <span class="code-inline">Security()</span> providers resolve without changes.</li>
+            <li>Traps <span class="code-inline">HTTPException</span> into actionable <span class="code-inline">CallToolResult(is_error=True)</span>.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="diagram-box">
++-----------------------------------------------------------------------------------+
+|                            FASTAPI APPLICATION RUNTIME                             |
+|                                                                                   |
+|  [Incoming Client Request]                                                        |
+|         │                                                                         |
+|         ├─── GET /mcp/sse ────────────► SseServerTransport (Handshake Scope)      |
+|         │                                      │                                  |
+|         │                                      ▼                                  |
+|         │                              ASGIScopeBridge                            |
+|         │                           (Records SSE/POST Scope)                      |
+|         │                                      │                                  |
+|         ├─── POST /mcp/messages                ▼                                  |
+|         │    {"method": "tools/call"} ─► Synthesized Request (In-Memory ASGI)     |
+|         │                                      │                                  |
+|         │                                      ▼                                  |
+|         │                            FastAPI solve_dependencies()                 |
+|         │                         (Resolves Depends & Security)                   |
+|         │                                      │                                  |
+|         │                                      ▼                                  |
+|         │                               Tool Invocation                           |
+|         │                         (Reflected or Custom Tool)                      |
+|         │                                      │                                  |
+|         │                                      ▼                                  |
+|         └───────────────────────────► CallToolResult Serialization                |
++-----------------------------------------------------------------------------------+
+      </div>
+    </section>
+
+    <!-- Comprehensive API Reference -->
+    <section id="api-reference" class="editorial-section">
+      <div class="section-kicker">06 / Specification</div>
+      <h2 class="section-heading">Comprehensive API Reference</h2>
+      <p class="section-desc">
+        Complete reference for all exported classes, methods, and functions in the <span class="code-inline">fast_mcp</span> package.
+      </p>
+
+      <div class="api-filter-row">
+        <input type="text" id="api-search" class="api-search-input" placeholder="Type to filter API reference symbols (e.g. mount, tool, serializer)..." onkeyup="filterApiTable()">
+      </div>
+
+      <table class="editorial-table" id="api-table">
+        <thead>
+          <tr>
+            <th style="width: 25%;">Symbol & Signature</th>
+            <th style="width: 20%;">Type</th>
+            <th>Description & Usage</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code class="code-inline">FastMCP(...)</code></td>
+            <td>Class</td>
+            <td>Main framework coordinator. Accepts <span class="code-inline">app</span>, <span class="code-inline">name</span>, <span class="code-inline">version</span>, <span class="code-inline">mount_path</span>, <span class="code-inline">route_tag</span>, <span class="code-inline">dynamic_discovery</span>, <span class="code-inline">router</span>, <span class="code-inline">baseline_tools</span>, <span class="code-inline">debug</span>, and <span class="code-inline">enable_ui</span>.</td>
+          </tr>
+          <tr>
+            <td><code class="code-inline">mcp.mount(app=None)</code></td>
+            <td>Method</td>
+            <td>Mounts MCP server endpoints (<span class="code-inline">/mcp/sse</span>, <span class="code-inline">/mcp/messages</span>, <span class="code-inline">/mcp/docs</span>) onto the bound FastAPI application.</td>
+          </tr>
+          <tr>
+            <td><code class="code-inline">@mcp.tool(...)</code></td>
+            <td>Decorator</td>
+            <td>Registers a custom composite AI tool with automatic schema and docstring extraction. Accepts <span class="code-inline">name</span>, <span class="code-inline">description</span>, <span class="code-inline">tags</span>, <span class="code-inline">meta</span>, and <span class="code-inline">ui</span>.</td>
+          </tr>
+          <tr>
+            <td><code class="code-inline">@mcp.serializer(...)</code></td>
+            <td>Decorator</td>
+            <td>Registers custom response serialization functions for specific return types or Pydantic models. Resolves inheritance via MRO.</td>
+          </tr>
+          <tr>
+            <td><code class="code-inline">@mcp.app(...)</code></td>
+            <td>Decorator</td>
+            <td>Registers an interactive in-chat MCP App widget (SEP-1865) with custom HTML and <span class="code-inline">ui://</span> resource URI.</td>
+          </tr>
+          <tr>
+            <td><code class="code-inline">run_stdio(mcp_or_app)</code></td>
+            <td>Coroutine</td>
+            <td>Executes the MCP server over standard I/O (stdin/stdout) for desktop AI assistants like Claude Desktop and Cursor.</td>
+          </tr>
+          <tr>
+            <td><code class="code-inline">get_current_request()</code></td>
+            <td>Function</td>
+            <td>Returns the active synthesized Starlette/FastAPI <span class="code-inline">Request</span> object during tool execution.</td>
+          </tr>
+          <tr>
+            <td><code class="code-inline">get_current_scope()</code></td>
+            <td>Function</td>
+            <td>Returns the active ASGI <span class="code-inline">scope</span> dictionary during tool execution.</td>
+          </tr>
+          <tr>
+            <td><code class="code-inline">RouteReflector(tag="mcp")</code></td>
+            <td>Class</td>
+            <td>Scans FastAPI routes, extracting docstrings, Pydantic body schemas, query parameters, and path variables into MCP tools.</td>
+          </tr>
+          <tr>
+            <td><code class="code-inline">KeywordTagRouter()</code></td>
+            <td>Class</td>
+            <td>Zero-dependency keyword, tag, and tokenized ranker used for progressive dynamic tool discovery.</td>
+          </tr>
+          <tr>
+            <td><code class="code-inline">format_validation_error()</code></td>
+            <td>Function</td>
+            <td>Formats Pydantic or FastAPI validation exceptions into concise, human-readable strings for LLM self-correction.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Testing & Verification Guide -->
+    <section class="editorial-section">
+      <div class="section-kicker">07 / Verification</div>
+      <h2 class="section-heading">Testing Across the ASGI Protocol Seam</h2>
+      <p class="section-desc">
+        Verify your MCP server end-to-end using standard <span class="code-inline">pytest</span> and <span class="code-inline">httpx.AsyncClient</span> with <span class="code-inline">ASGITransport</span>. Zero network sockets required.
+      </p>
+
+      <div class="code-wrapper">
+        <div class="code-header">
+          <span>tests/test_mcp_integration.py</span>
+          <button class="btn-copy-code" onclick="copySnippet('code-testing')">Copy Code</button>
+        </div>
+        <pre id="code-testing"><code>import pytest
+from httpx import AsyncClient, ASGITransport
+from fastapi import FastAPI
+from fast_mcp import FastMCP
+
+@pytest.mark.asyncio
+async def test_mcp_endpoints_and_tools():
+    app = FastAPI()
+    mcp = FastMCP(app=app, name="test-store")
+
+    @app.get("/items/{item_id}", tags=["mcp"])
+    def get_item(item_id: int):
+        return {"id": item_id, "name": "Widget"}
+
+    mcp.mount()
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        # 1. Verify docs inspector
+        res = await client.get("/mcp/docs")
+        assert res.status_code == 200
+
+        # 2. Verify tool reflection
+        tools_res = await client.get("/mcp/docs/tools")
+        assert tools_res.status_code == 200
+        tools = tools_res.json()["tools"]
+        assert any(t["name"] == "get_item" for t in tools)
+
+        # 3. Test execution endpoint
+        call_res = await client.post("/mcp/docs/call", json={"name": "get_item", "arguments": {"item_id": 42}})
+        assert call_res.status_code == 200
+        assert call_res.json()["result"]["id"] == 42</code></pre>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Editorial Footer & Colophon -->
+  <footer class="editorial-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <h4 style="font-family: var(--font-serif); font-size: 18px; text-transform: none; margin-bottom: 8px;">mcp-fastapi (fast-mcp)</h4>
+          <p style="color: var(--text-muted); font-size: 14px; line-height: 1.6; max-width: 320px;">
+            The FastAPI-native Model Context Protocol framework. Designed with flat, high-contrast, editorial typography. Zero external JavaScript frameworks.
+          </p>
+        </div>
+        <div class="footer-col">
+          <h4>Documentation</h4>
+          <ul>
+            <li><a href="#quickstart">Quickstart</a></li>
+            <li><a href="#features">Core Features</a></li>
+            <li><a href="#client-config">Desktop Setup</a></li>
+            <li><a href="#architecture">Architecture</a></li>
+            <li><a href="#api-reference">API Reference</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>AI & Indexing</h4>
+          <ul>
+            <li><a href="llms.txt">llms.txt</a></li>
+            <li><a href="llms-full.txt">llms-full.txt</a></li>
+            <li><a href="sitemap.xml">sitemap.xml</a></li>
+            <li><a href="robots.txt">robots.txt</a></li>
+            <li><a href="https://github.com/Manas-maker/fast-mcp/blob/master/smithery.yaml">smithery.yaml</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Project Links</h4>
+          <ul>
+            <li><a href="https://github.com/Manas-maker/fast-mcp" target="_blank" rel="noopener">GitHub Repository</a></li>
+            <li><a href="https://pypi.org/project/mcp-fastapi/" target="_blank" rel="noopener">PyPI Package</a></li>
+            <li><a href="https://github.com/Manas-maker/fast-mcp/issues" target="_blank" rel="noopener">Issue Tracker</a></li>
+            <li><a href="https://github.com/Manas-maker/fast-mcp/blob/master/LICENSE" target="_blank" rel="noopener">MIT License</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div>
+          © 2026 Manas Pradhan. Released under the MIT License.
+        </div>
+        <div>
+          Built for the Model Context Protocol ecosystem.
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Toast Element -->
+  <div id="copy-toast">Copied to clipboard!</div>
+
+  <!-- Vanilla JavaScript -->
+  <script>
+    // Copy Text to Clipboard & Show Toast
+    function copyText(text) {
+      navigator.clipboard.writeText(text).then(function() {
+        showToast("Copied: " + text);
+      }).catch(function() {
+        showToast("Failed to copy");
+      });
+    }
+
+    function copySnippet(elementId) {
+      const el = document.getElementById(elementId);
+      if (!el) return;
+      const text = el.innerText;
+      navigator.clipboard.writeText(text).then(function() {
+        showToast("Code copied to clipboard!");
+      }).catch(function() {
+        showToast("Failed to copy code");
+      });
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById("copy-toast");
+      if (!toast) return;
+      toast.innerText = message;
+      toast.classList.add("show");
+      setTimeout(function() {
+        toast.classList.remove("show");
+      }, 2200);
+    }
+
+    // Install Tabs Switcher
+    function switchInstallTab(event, tabId) {
+      const contents = document.querySelectorAll('.install-tab-content');
+      contents.forEach(function(c) { c.style.display = 'none'; });
+
+      const buttons = document.querySelectorAll('.install-tab-btn');
+      buttons.forEach(function(b) { b.classList.remove('active'); });
+
+      const target = document.getElementById(tabId);
+      if (target) target.style.display = 'flex';
+      event.currentTarget.classList.add('active');
+    }
+
+    // Showcase Tabs Switcher
+    function switchShowcase(event, paneId) {
+      const panes = document.querySelectorAll('.showcase-pane');
+      panes.forEach(function(p) { p.classList.remove('active'); });
+
+      const buttons = document.querySelectorAll('.showcase-btn');
+      buttons.forEach(function(b) { b.classList.remove('active'); });
+
+      const target = document.getElementById(paneId);
+      if (target) target.classList.add('active');
+      event.currentTarget.classList.add('active');
+    }
+
+    // Client Config Tabs Switcher
+    function switchConfigTab(event, paneId) {
+      const panes = document.querySelectorAll('.config-pane');
+      panes.forEach(function(p) { p.classList.remove('active'); });
+
+      const buttons = document.querySelectorAll('.config-tab-btn');
+      buttons.forEach(function(b) { b.classList.remove('active'); });
+
+      const target = document.getElementById(paneId);
+      if (target) target.classList.add('active');
+      event.currentTarget.classList.add('active');
+    }
+
+    // API Reference Table Filter
+    function filterApiTable() {
+      const input = document.getElementById("api-search");
+      const filter = input.value.toLowerCase();
+      const table = document.getElementById("api-table");
+      const trs = table.getElementsByTagName("tr");
+
+      for (let i = 1; i < trs.length; i++) {
+        const text = trs[i].textContent || trs[i].innerText;
+        if (text.toLowerCase().indexOf(filter) > -1) {
+          trs[i].style.display = "";
+        } else {
+          trs[i].style.display = "none";
+        }
+      }
+    }
+
+    // Dark/Light Theme Toggle
+    const themeBtn = document.getElementById("theme-toggle");
+    function initTheme() {
+      const savedTheme = localStorage.getItem("theme");
+      if (savedTheme) {
+        document.documentElement.setAttribute("data-theme", savedTheme);
+        themeBtn.innerText = "Theme: " + (savedTheme === "dark" ? "Dark" : "Light");
+      } else {
+        const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+        document.documentElement.setAttribute("data-theme", prefersDark ? "dark" : "light");
+        themeBtn.innerText = "Theme: Auto";
+      }
+    }
+
+    themeBtn.addEventListener("click", function() {
+      const current = document.documentElement.getAttribute("data-theme");
+      const next = current === "dark" ? "light" : "dark";
+      document.documentElement.setAttribute("data-theme", next);
+      localStorage.setItem("theme", next);
+      themeBtn.innerText = "Theme: " + (next === "dark" ? "Dark" : "Light");
+    });
+
+    initTheme();
+  </script>
+</body>
+</html>

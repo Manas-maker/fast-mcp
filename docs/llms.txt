@@ -1,0 +1,122 @@
+# mcp-fastapi (fast-mcp)
+
+> FastAPI-native Model Context Protocol (MCP) framework with automatic route reflection, ASGI scope bridging, dynamic progressive tool discovery, resilient error recovery, and interactive in-chat MCP Apps (SEP-1865).
+
+## Overview
+
+`mcp-fastapi` (package: `mcp-fastapi`, module: `fast_mcp`) enables Python developers to turn existing FastAPI backends into Model Context Protocol servers in one line of code (`mcp.mount()`). Rather than running separate subprocesses or external proxies, `fast-mcp` mounts in-process directly over standard ASGI (`/mcp/sse`, `/mcp/messages`, `/mcp/docs`).
+
+For complete, single-file text documentation containing all module signatures, parameter types, class members, and exhaustive code examples, see:
+- [llms-full.txt](https://manas-maker.github.io/fast-mcp/llms-full.txt): Single-file full documentation for LLMs and coding agents
+
+## Installation
+
+```bash
+pip install mcp-fastapi
+# or using uv:
+uv add mcp-fastapi
+```
+
+## Quickstart
+
+```python
+from fastapi import FastAPI, Depends, Header, HTTPException
+from pydantic import BaseModel
+from fast_mcp import FastMCP
+
+app = FastAPI(title="Store API")
+mcp = FastMCP(app=app, name="store-mcp")
+
+# 1. Automatic Route Reflection via tags=["mcp"]
+class Product(BaseModel):
+    id: int
+    name: str
+    price: float
+
+@app.get("/products/{product_id}", tags=["mcp"])
+async def get_product(product_id: int) -> Product:
+    """Fetch product details by ID."""
+    return Product(id=product_id, name="Widget", price=19.99)
+
+# 2. Custom AI Tool with FastAPI Dependency Injection
+def get_user(authorization: str = Header(...)) -> str:
+    return authorization.replace("Bearer ", "")
+
+@mcp.tool(name="order_status", description="Get order status")
+def check_order(order_id: str, user: str = Depends(get_user)) -> dict:
+    return {"order_id": order_id, "user": user, "status": "Shipped"}
+
+# 3. Mount MCP endpoints (/mcp/sse, /mcp/messages, /mcp/docs)
+mcp.mount()
+```
+
+## Core Primitives
+
+- `FastMCP`: Hybrid ASGI server instance bound directly to a FastAPI application. Manages SSE transport, route reflection, custom tools, dynamic discovery router, serializers, and MCP Apps.
+- `RouteReflector`: Inspects FastAPI `APIRoute` instances tagged with `route_tag` (default: `"mcp"`), extracting docstrings, Pydantic body schemas, query parameters, and path variables into MCP `Tool` definitions.
+- `ASGIScopeBridge`: Bridges incoming headers (`Authorization`, cookies, custom headers) from SSE handshakes and POST messages into an in-memory ASGI request context, allowing FastAPI `Depends()` and `Security()` to execute transparently.
+- `BaseToolRouter` / `KeywordTagRouter`: Pluggable discovery engine that intercepts `tools/list` when `dynamic_discovery=True` and provides the `search_tools(query: str)` meta-tool to protect LLM context windows.
+- `MCPApp`: Interactive in-chat UI widget supporting SEP-1865 (`ui://` scheme and HTML iframe bundles) via `@mcp.app()` and built-in `inspect()` tool.
+- `run_stdio`: Async entry point for connecting local desktop AI clients (Claude Desktop, Cursor) over standard input/output pipes.
+
+## Key Exports (`fast_mcp`)
+
+| Symbol | Type | Description |
+|---|---|---|
+| `FastMCP` | Class | Main framework controller & ASGI bridge |
+| `run_stdio` | Coroutine | Programmatic runner for stdio MCP connections |
+| `get_current_request` | Function | Retrieves active synthesized ASGI `Request` inside tools |
+| `get_current_scope` | Function | Retrieves active ASGI `scope` dictionary inside tools |
+| `ASGIScopeBridge` | Class | Low-level SSE/POST scope merger and request synthesizer |
+| `CustomTool` | Class | MCP tool model instantiated from `@mcp.tool()` |
+| `ReflectedTool` | Class | MCP tool model reflected from FastAPI `APIRoute` |
+| `RouteReflector` | Class | Inspection engine converting FastAPI routes to MCP tools |
+| `KeywordTagRouter` | Class | Default zero-dependency keyword & tag discovery router |
+| `BaseToolRouter` | Class | Abstract base class for custom tool discovery routers |
+| `MCPApp` | Class | In-chat MCP App widget descriptor (SEP-1865) |
+| `MCPAppRegistry` | Class | Storage and resolver for `ui://` resources and apps |
+| `UIResource` | Class | HTML resource backing an interactive MCP App |
+| `format_validation_error`| Function | Formats Pydantic/FastAPI validation errors for LLM self-correction |
+
+## Desktop AI Client Configuration (Claude Desktop & Cursor)
+
+### Zero-install using `uvx`:
+```json
+{
+  "mcpServers": {
+    "my-fastapi-app": {
+      "command": "uvx",
+      "args": ["--from", "mcp-fastapi", "fast-mcp", "stdio", "main:app"]
+    }
+  }
+}
+```
+
+### Local CLI:
+```json
+{
+  "mcpServers": {
+    "my-fastapi-app": {
+      "command": "fast-mcp",
+      "args": ["stdio", "main:app"]
+    }
+  }
+}
+```
+
+## Supported Capabilities
+
+- **Tools**: Route reflection via `tags=["mcp"]`, `@mcp.tool()` composite decorators, Pydantic JSON schema generation, docstring parsing (Google/Sphinx/NumPy).
+- **Resources**: `ui://` custom scheme, SEP-1865 HTML bundles, interactive browser inspector at `/mcp/docs`, and in-chat widgets via `@mcp.app()`.
+- **Prompts**: Standard MCP prompt hooks and templates.
+- **Transports**: `stdio` (local pipes for Claude Desktop/Cursor) and `sse` (HTTP/SSE dual-citizen ASGI mount at `/mcp/sse` and `/mcp/messages`).
+
+## Reference Links
+
+- [Official Website](https://manas-maker.github.io/fast-mcp/): Interactive documentation, guides, and API reference
+- [GitHub Repository](https://github.com/Manas-maker/fast-mcp): Source code and issue tracker
+- [PyPI Package](https://pypi.org/project/mcp-fastapi/): Releases and wheel downloads
+- [Full Text for LLMs](https://manas-maker.github.io/fast-mcp/llms-full.txt): Complete single-file documentation
+- [Core Specification](https://github.com/Manas-maker/fast-mcp/blob/master/docs/specs/0001-fast-mcp-core.md): Technical specification
+- [ADR 0001: Architecture](https://github.com/Manas-maker/fast-mcp/blob/master/docs/adr/0001-architecture-foundation.md): Architectural decisions
+- [ADR 0002: Scope Bridging & Dual UI](https://github.com/Manas-maker/fast-mcp/blob/master/docs/adr/0002-dual-ui-auth-bridging-and-error-handling.md): Auth and UI specification

@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "name": "mcp-fastapi",
+  "description": "FastAPI-native Model Context Protocol (MCP) framework with automatic route reflection, ASGI scope bridging, dynamic progressive tool discovery, resilient error recovery, and interactive in-chat MCP Apps (SEP-1865).",
+  "version": "0.1.0",
+  "author": "Manas Pradhan",
+  "license": "MIT",
+  "homepage": "https://manas-maker.github.io/fast-mcp/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Manas-maker/fast-mcp"
+  },
+  "capabilities": {
+    "tools": {
+      "listChanged": false
+    },
+    "resources": {
+      "schemes": [
+        "ui"
+      ]
+    },
+    "prompts": {},
+    "transports": [
+      "stdio",
+      "sse"
+    ]
+  },
+  "runtime": {
+    "command": "uvx",
+    "args": [
+      "--from",
+      "mcp-fastapi",
+      "fast-mcp",
+      "stdio",
+      "main:app"
+    ]
+  }
+}

@@ -1,0 +1,12 @@
+# Smithery configuration for mcp-fastapi
+# https://smithery.ai/docs/config
+startCommand:
+  type: stdio
+  config:
+    command: "uvx"
+    args:
+      - "--from"
+      - "mcp-fastapi"
+      - "fast-mcp"
+      - "stdio"
+      - "${target}"
