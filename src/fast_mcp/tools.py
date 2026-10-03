@@ -62,7 +62,7 @@ def build_tool_schema_and_models(
     tool_name: str,
     dependant: Dependant,
     docstring_params: dict[str, str] | None = None,
-) -> tuple[dict[str, Any], list[str], dict[str, type[BaseModel]]]:
+) -> tuple[dict[str, Any], list[str], dict[str, type[BaseModel]], type[BaseModel] | None]:
     """Inspect a function's Dependant and generate an MCP JSON schema and parameter mappings."""
     doc_params = docstring_params or {}
     fields: dict[str, Any] = {}
@@ -114,15 +114,16 @@ def build_tool_schema_and_models(
                 fkw["description"] = desc
             fields[param_name] = (annotation or Any, Field(**fkw))
 
-    # Build JSON Schema
+    # Build JSON Schema and input model
     if fields:
         model = create_model(f"{tool_name}_Input", **fields)
         input_schema = model.model_json_schema()
         input_schema["type"] = "object"
     else:
+        model = None
         input_schema = {"type": "object", "properties": {}}
 
-    return input_schema, body_param_names, body_models
+    return input_schema, body_param_names, body_models, model
 
 
 class MCPTool:
@@ -138,6 +139,7 @@ class MCPTool:
         body_param_names: list[str],
         body_models: dict[str, type[BaseModel]],
         tags: list[str] | None = None,
+        input_model: type[BaseModel] | None = None,
     ) -> None:
         self.name = name
         self.description = description
@@ -147,6 +149,7 @@ class MCPTool:
         self.body_param_names = body_param_names
         self.body_models = body_models
         self.tags = tags or []
+        self.input_model = input_model
 
         # Create a dependency-only Dependant for solving FastAPI Depends() and Security()
         self.dependency_dependant = Dependant(
@@ -182,31 +185,72 @@ class MCPTool:
         args = arguments or {}
         call_kwargs: dict[str, Any] = {}
 
-        # 1. Match path & query parameters
-        for param in self.dependant.path_params + self.dependant.query_params:
-            if param.name in args:
-                call_kwargs[param.name] = args[param.name]
-            elif param.alias in args:
-                call_kwargs[param.name] = args[param.alias]
-            elif not param.field_info.is_required() and param.field_info.default is not ...:
-                call_kwargs[param.name] = param.field_info.default
+        if self.input_model is not None:
+            args_to_validate = dict(args)
+            for body_param_name in self.body_models:
+                if body_param_name in args_to_validate and isinstance(args_to_validate[body_param_name], dict):
+                    for k, v in args_to_validate[body_param_name].items():
+                        if k not in args_to_validate:
+                            args_to_validate[k] = v
 
-        # 2. Match body parameters
-        for body_param in self.dependant.body_params:
-            param_name = body_param.name
-            if param_name in self.body_models:
-                model_cls = self.body_models[param_name]
-                if param_name in args and isinstance(args[param_name], dict):
-                    call_kwargs[param_name] = model_cls.model_validate(args[param_name])
+            for param in self.dependant.path_params + self.dependant.query_params:
+                if param.alias and param.alias in args_to_validate and param.name not in args_to_validate:
+                    args_to_validate[param.name] = args_to_validate[param.alias]
+
+            validated = self.input_model.model_validate(args_to_validate)
+
+            # 1. Match path & query parameters
+            for param in self.dependant.path_params + self.dependant.query_params:
+                if hasattr(validated, param.name):
+                    call_kwargs[param.name] = getattr(validated, param.name)
+                elif param.alias and hasattr(validated, param.alias):
+                    call_kwargs[param.name] = getattr(validated, param.alias)
+                elif not param.field_info.is_required() and param.field_info.default is not ...:
+                    call_kwargs[param.name] = param.field_info.default
+
+            # 2. Match body parameters
+            for body_param in self.dependant.body_params:
+                param_name = body_param.name
+                if param_name in self.body_models:
+                    model_cls = self.body_models[param_name]
+                    if param_name in args and isinstance(args[param_name], dict):
+                        call_kwargs[param_name] = model_cls.model_validate(args[param_name])
+                    else:
+                        model_data = {
+                            k: getattr(validated, k)
+                            for k in model_cls.model_fields
+                            if hasattr(validated, k)
+                        }
+                        call_kwargs[param_name] = model_cls.model_validate(model_data)
                 else:
-                    # Filter keys matching model fields
-                    model_data = {k: v for k, v in args.items() if k in model_cls.model_fields}
-                    call_kwargs[param_name] = model_cls.model_validate(model_data)
-            else:
-                if param_name in args:
-                    call_kwargs[param_name] = args[param_name]
-                elif not body_param.field_info.is_required() and body_param.field_info.default is not ...:
-                    call_kwargs[param_name] = body_param.field_info.default
+                    if hasattr(validated, param_name):
+                        call_kwargs[param_name] = getattr(validated, param_name)
+                    elif not body_param.field_info.is_required() and body_param.field_info.default is not ...:
+                        call_kwargs[param_name] = body_param.field_info.default
+        else:
+            # Fallback when no input_model exists
+            for param in self.dependant.path_params + self.dependant.query_params:
+                if param.name in args:
+                    call_kwargs[param.name] = args[param.name]
+                elif param.alias in args:
+                    call_kwargs[param.name] = args[param.alias]
+                elif not param.field_info.is_required() and param.field_info.default is not ...:
+                    call_kwargs[param.name] = param.field_info.default
+
+            for body_param in self.dependant.body_params:
+                param_name = body_param.name
+                if param_name in self.body_models:
+                    model_cls = self.body_models[param_name]
+                    if param_name in args and isinstance(args[param_name], dict):
+                        call_kwargs[param_name] = model_cls.model_validate(args[param_name])
+                    else:
+                        model_data = {k: v for k, v in args.items() if k in model_cls.model_fields}
+                        call_kwargs[param_name] = model_cls.model_validate(model_data)
+                else:
+                    if param_name in args:
+                        call_kwargs[param_name] = args[param_name]
+                    elif not body_param.field_info.is_required() and body_param.field_info.default is not ...:
+                        call_kwargs[param_name] = body_param.field_info.default
 
         # 3. Resolve FastAPI dependencies (Depends, Security, Header, Cookie)
         if request is not None and (
@@ -257,7 +301,7 @@ class CustomTool(MCPTool):
 
         doc_params = parse_docstring_params(raw_doc)
         dependant = get_dependant(path="", call=fn)
-        input_schema, body_param_names, body_models = build_tool_schema_and_models(
+        input_schema, body_param_names, body_models, input_model = build_tool_schema_and_models(
             tool_name=tool_name,
             dependant=dependant,
             docstring_params=doc_params,
@@ -272,4 +316,5 @@ class CustomTool(MCPTool):
             body_param_names=body_param_names,
             body_models=body_models,
             tags=tags or [],
+            input_model=input_model,
         )

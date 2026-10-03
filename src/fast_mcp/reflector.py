@@ -20,6 +20,7 @@ class ReflectedTool(MCPTool):
         body_param_names: list[str],
         body_models: dict[str, type[BaseModel]],
         tags: list[str] | None = None,
+        input_model: type[BaseModel] | None = None,
     ) -> None:
         super().__init__(
             name=name,
@@ -30,6 +31,7 @@ class ReflectedTool(MCPTool):
             body_param_names=body_param_names,
             body_models=body_models,
             tags=tags if tags is not None else list(route.tags or []),
+            input_model=input_model,
         )
         self.endpoint = endpoint
         self.route = route
@@ -57,7 +59,7 @@ class RouteReflector:
         description = inspect.cleandoc(raw_doc) if raw_doc else ""
         doc_params = parse_docstring_params(raw_doc)
 
-        input_schema, body_param_names, body_models = build_tool_schema_and_models(
+        input_schema, body_param_names, body_models, input_model = build_tool_schema_and_models(
             tool_name=tool_name,
             dependant=route.dependant,
             docstring_params=doc_params,
@@ -72,6 +74,7 @@ class RouteReflector:
             body_param_names=body_param_names,
             body_models=body_models,
             tags=list(route.tags or []),
+            input_model=input_model,
         )
 
     def reflect_routes(self, routes: list[Any]) -> dict[str, ReflectedTool]:
