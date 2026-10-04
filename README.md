@@ -1,3 +1,10 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/brand-wordmark-dark.svg">
+    <img alt="Fast-MCP: ASGI to Model Context Protocol" src="docs/brand-wordmark-light.svg" width="240">
+  </picture>
+</p>
+
 # fast-mcp
 <!-- mcp-name: io.github.Manas-maker/fast-mcp -->
 

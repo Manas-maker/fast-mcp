@@ -9,6 +9,11 @@
   <meta name="author" content="Manas Pradhan">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://manas-maker.github.io/fast-mcp/">
+  <meta name="google-site-verification" content="PatNGq5Zsuo4lbu63-oH641JMKSdywNAEOIy8bwyQXI">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+  <link rel="apple-touch-icon" href="favicon-180x180.png">
 
   <!-- OpenGraph Metadata -->
   <meta property="og:site_name" content="mcp-fastapi">
@@ -185,6 +190,60 @@
       background-color: var(--surface);
       border-color: var(--border-dark);
       text-decoration: underline;
+    }
+
+    /* Brand Wordmark Hero */
+    .brand-hero-block {
+      display: flex;
+      align-items: center;
+    }
+
+    .brand-logo-heading {
+      margin: 0;
+      padding: 0;
+      display: block;
+      line-height: 0;
+    }
+
+    .brand-wordmark-img {
+      width: 360px;
+      max-width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .brand-wordmark-dark {
+      display: none;
+    }
+
+    html[data-theme="dark"] .brand-wordmark-light {
+      display: none;
+    }
+
+    html[data-theme="dark"] .brand-wordmark-dark {
+      display: block;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      html:not([data-theme="light"]) .brand-wordmark-light {
+        display: none;
+      }
+      html:not([data-theme="light"]) .brand-wordmark-dark {
+        display: block;
+      }
+    }
+
+    .masthead-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 640px) {
+      .brand-wordmark-img {
+        width: 290px;
+      }
     }
 
     /* Editorial Masthead */
@@ -1050,10 +1109,17 @@
   <header class="masthead">
     <div class="container">
       <div class="masthead-title-row">
-        <div>
-          <h1 class="brand-title">mcp-fastapi<span class="package-tag">(fast-mcp)</span></h1>
+        <div class="brand-hero-block">
+          <h1 class="brand-logo-heading">
+            <img src="brand-wordmark-light.svg" alt="Fast-MCP (mcp-fastapi)" class="brand-wordmark-img brand-wordmark-light" width="500" height="166" />
+            <img src="brand-wordmark-dark.svg" alt="Fast-MCP (mcp-fastapi)" class="brand-wordmark-img brand-wordmark-dark" width="500" height="166" />
+            <span class="sr-only" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0;">Fast-MCP: mcp-fastapi</span>
+          </h1>
         </div>
-        <div>
+        <div class="masthead-actions">
+          <a href="https://pypi.org/project/mcp-fastapi/" target="_blank" rel="noopener" class="badge">
+            PyPI: mcp-fastapi
+          </a>
           <a href="https://github.com/Manas-maker/fast-mcp" target="_blank" rel="noopener" class="badge">
             ★ Star on GitHub
           </a>
@@ -1078,6 +1144,10 @@
   <!-- Sticky Horizontal Navigation -->
   <nav class="main-nav">
     <div class="container nav-inner">
+      <a href="#" class="nav-brand" style="font-weight: 700; color: var(--text); display: inline-flex; align-items: center; gap: 8px; margin-right: 12px; text-decoration: none;">
+        <img src="favicon.svg" width="18" height="18" alt="Fast-MCP logo" style="vertical-align: middle;">
+        <span>Fast-MCP</span>
+      </a>
       <a href="#quickstart">Quickstart</a>
       <a href="#features">7 Core Capabilities</a>
       <a href="#client-config">Desktop Clients (Claude/Cursor)</a>
